@@ -51,12 +51,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const { email, password } = req.body;
 
-        // 1. Vérification de la présence des champs
+        // Vérification de la présence des champs
         if (!email || !password) {
             return res.status(400).json({ error: "Email et mot de passe requis."});
         }
 
-        // 2. Chercher l'utilisateur en base de données avec Sequelize
+        // Chercher l'utilisateur en base de données avec Sequelize
         const user: any = await User.findOne({ where: { email } });
 
         if (!user) {
@@ -64,24 +64,27 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Identifiants incorrects." });
         }
 
-        // 3. Comparer le mot de passe reçu avec celui haché en base de données
+        // Comparer le mot de passe reçu avec celui haché en base de données
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({ error: "Identifiants incorrects."});
         }
 
-        // 4. Génération du token JWT
-        // En conditions réelles, ce secret DOIT être dans un fichier .env (ex: process.env.JWT_SECRET)
-        const jwtSecret = process.env.JWT_SECRET || 'clef_secrete_provisoire_pour_le_dev';
+        // Générer l'Access Token (Durée très courte : 15 minutes)
+        const token = jwt.sign({ id: user.id, email: user.email }, 'SECRET_JWT', { expiresIn: '15m' });
 
-        const token = jwt.sign(
-            { id: user.id, email: user.email }, // Le payload : les données qu'on embarque dans le token
-            jwtSecret,
-            { expiresIn: '15m' } // On met une durée courte, on gérera le Refresh Token plus tard ! 
-        );
+        // Générer le Refresh Token (Durée longue : 7 jours)
+        const refreshToken = jwt.sign({ id: user.id, email: user.email }, 'SECRET_REFRESH', { expiresIn: '7d' }); 
 
-        // 5. la réponse au client
+        // Envoyer le Refresh Token dans le cookie HttpOnly
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 jours en millisecondes
+        });
+
+        // Renvois de la réponse au client et sortie de la fonction
         return res.status(200).json({
             message: "Connexion réussie !",
             token: token,
@@ -90,14 +93,51 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 pseudo: user.pseudo
             }
         });
-        
+    
     } catch(error) {
         next(error);
     }
 };
 
 // Rafraîchissement du token 
-export const refreshToken = async (req: Request, res: Response) => {
-    // TODO: Vérifier le cookie HttpOnly, générer un nouveau JWT
-    res.status(200).json({ message: "Bouchon: Route Refresh Token OK"});
-}
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Lire le cookie HttpOnly grâce à cookie-parser
+        const incomingRefreshToken = req.cookies?.refreshToken;
+
+        if (!incomingRefreshToken) {
+            return res.status(401).json({ error: "Non autorisé, aucun token de rafraîchissement fournit." });
+        }
+
+        // Vérifier la validité mathématique du Refresh Token
+        jwt.verify(incomingRefreshToken, 'SECRET_REFRESH', async (err: any, decoded: any) => {
+            if (err) {
+                // Si le token est expiré ou falsifié, on refuse l'accès
+                return res.status(403).json({ error: "Refresh token invalide ou expiré. Veuillez vous reconnecter." });
+            }
+
+            // Vérifier que l'utilisateur existe toujours en base de données
+            const user: any = await User.findByPk(decoded.id);
+
+            if (!user) {
+                return res.status(404).json({ error: "Utilisateur non trouvé." });
+            }
+
+            // Générer un NOUVEAU token d'accès tout frais
+            const newAccessToken = jwt.sign(
+                { id: user.id, email: user.email },
+                'SECRET_JWT',
+                { expiresIn: '15m' }
+            );
+
+            // Renvoyer le nouveau pass d'entrée
+            return res.status(200).json({
+                message: "Token rafraîchi avec succès",
+                token: newAccessToken
+            });
+        });
+
+    } catch(error) {
+        next(error);
+    }
+};
