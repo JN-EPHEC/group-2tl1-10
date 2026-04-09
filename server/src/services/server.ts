@@ -12,6 +12,8 @@ import authRoutes from "../routes/authRoutes";
 import profileRoutes from "../routes/profileRoutes";
 import 'dotenv/config'
 import cookieParser from 'cookie-parser';
+// Import des nouvelles routes
+import authentificationRoutes from "../routes/auth.routes";
 
 const app: Application = express(); 
 const port = 3000; 
@@ -48,12 +50,22 @@ app.get('/api/hello/:name', (req: Request, res: Response) => {
     res.json({"message": `Bonjour ${req.params.name}`, "timestamp": new Date().toISOString()});
 });
 
+// --- ON MET TA NOUVELLE ROUTE ICI, EN PRIORITÉ ABSOLUE ---
+app.use('/api/auth', (req, res, next) => {
+    console.log(`🚨 SUPER MOUCHARD : Requête reçue sur l'URL -> ${req.url}`);
+    next(); // On passe le relais à tes vraies routes
+}, authentificationRoutes);
+// ---------------------------------------------------------
+
 // Mise en place du routeur, avec toutes les routes de userRoutes qui utilisent '/api/users'
 app.use('/api/users', userRoutes);
 // Ajoute du routeur, avec toutes les routes de adminRoutes qui utilisent '/api/admin/basic'
 app.use(adminRoutes);
-app.use(authRoutes);
+// Mise en pause de l'ancienne route
+// app.use(authRoutes);
 app.use(profileRoutes);
+// Import route authentification 
+
 
 async function startApp() {
     try {
