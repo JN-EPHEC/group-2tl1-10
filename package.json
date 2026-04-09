@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/JN-EPHEC/individual-Gloutamax#readme",
   "devDependencies": {
+    "@types/sequelize": "^4.28.20",
     "concurrently": "x.y.z"
   }
 }

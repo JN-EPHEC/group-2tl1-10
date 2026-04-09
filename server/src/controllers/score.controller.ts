@@ -23,6 +23,7 @@ export const getTopScores = async (req: Request, res: Response, next: NextFuncti
                 }
             }
         }
+        return output;
     } catch(error) {
         next(error);
     }
