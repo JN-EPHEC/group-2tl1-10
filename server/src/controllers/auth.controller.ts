@@ -51,6 +51,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const { email, password } = req.body;
 
+        // ! Débogage avec postman
+        console.log("1. Email reçu depuis Postman :", email);
+        console.log("2. Mot de passe reçu depuis Postman :", password);
+
         // Vérification de la présence des champs
         if (!email || !password) {
             return res.status(400).json({ error: "Email et mot de passe requis."});
@@ -75,9 +79,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         }
 
         // Comparer le mot de passe reçu avec celui haché en base de données
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        // ! On met en pause le JWT, on test juste l'accès
+        // const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = true;
 
         if (!isPasswordValid) {
+            console.log("ERREUR : Le mot de passe ne correspond pas !")
             return res.status(401).json({ error: "Identifiants incorrects."});
         }
 
