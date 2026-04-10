@@ -14,13 +14,13 @@ const Question = sequelize.define('Question', {
         allowNull: false
     },
     possibleAnswers: {
-        type: DataTypes.JSON, // * Pour SQLITE, mais on utilise Postgre a voir pour modifier
+        type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false,
         defaultValue: []
     },
     correctAnswer: {
-        type: DataTypes.STRING, // Stockage du texte e la bonne réponse (pas besoin d'un tableau)
-        allowNull: true
+        type: DataTypes.STRING, // Stockage du texte de la bonne réponse (pas besoin d'un tableau)
+        allowNull: true // Autorisation du null pour les question sans bonne réponse !
     }
 }, { tableName: 'Question', timestamps: true });
 
