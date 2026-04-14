@@ -88,7 +88,20 @@ export const updateQuestion = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-export const deleteQuestion = (req: Request, res: Response) => {
-    // TODO : Supprimer une question existant dans la table des questions
-    res.status(200).json({message: "Bouchon: Route deleteQuestion OK"});
+// Supprimer une question (Réservé aux Admin normalement)
+export const deleteQuestion = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+
+        const question = await Question.findByPk(id);
+        if (!question) {
+            return res.status(404).json({ error: "Question introuvable." });
+        }
+
+        await question.destroy();
+
+        return res.status(204).json({ message: "Question supprimée avec succès." });
+    } catch(error) {
+        next(error);
+    }
 };
