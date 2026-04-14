@@ -1,10 +1,21 @@
 import type {Request, Response, NextFunction} from 'express';
+// Import des modèles depuis le fichier d'index (qui contient les relations)
+import { Question, Category } from '../models'
 
 // 1. Méthodes publiques 
 
-export const getAllQuestions = (req: Request, res: Response) => {
-    // TODO: Récupérer toutes les question de la BDD et la table des questions
-    res.status(200).json({message: "Bouchon: Route All Question OK"});
+// Récupérer toutes les questions
+export const getAllQuestions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const questions = await Question.findAll({
+            // On inclut directement la catégorie associée 
+            include: [{model: Category, as: 'category', attributes: ['id', 'name'] }]
+        });
+
+        return res.status(200).json(questions);
+    } catch(error) {
+        next(error);
+    }
 };
 
 export const getQuestionById = (req: Request, res: Response) => {
