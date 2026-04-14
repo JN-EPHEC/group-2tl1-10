@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction} from "express";
-
+// UwU
 export const getTopScores = async (req: Request, res: Response, next: NextFunction) => {
     try {
         //code some shit in hereeeee
