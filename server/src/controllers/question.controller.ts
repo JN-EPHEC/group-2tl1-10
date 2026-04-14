@@ -18,9 +18,22 @@ export const getAllQuestions = async (req: Request, res: Response, next: NextFun
     }
 };
 
-export const getQuestionById = (req: Request, res: Response) => {
-    // TODO : Récupérer la question selon l'ID de la BDD et la tables des questions
-    res.status(200).json({message: "Bouchon: Route GetQuestionById OK"});
+// Récupérer une question par son ID
+export const getQuestionById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const question = await Question.findByPk(id , {
+            include: [{ model: Category, as: 'category', attributes: ['name'] }]
+        });
+
+        if (!question) {
+            return res.status(404).json({ error: "Question introuvable."});
+        }
+
+        return res.status(200).json(question);
+    } catch(error) {
+        next(error);
+    }
 };
 
 // 2. Méthodes protégés 
