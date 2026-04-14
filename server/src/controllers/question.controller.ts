@@ -65,9 +65,27 @@ export const createQuestion = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-export const updateQuestion = (req: Request, res: Response) => {
-    // TODO : Mettre à jour une question existante dans la table des questions
-    res.status(200).json({message: "Bouchon: Route updateQuestion OK"});
+// Modifier une question (Réservé aux Admins normalement)
+export const updateQuestion = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body; // Récupération de tous les champs modifiés envoyés par le client
+
+        const question = await Question.findByPk(id);
+        if (!question) {
+            return res.status(404).json({ error: "Question introuvable." });
+        }
+
+        // Mise à jour avec les nouvelles données
+        await question.update(updates);
+
+        return res.status(200).json({
+            message: "Question mise à jour !",
+            question
+        });
+    } catch(error) {
+        next(error);
+    }
 };
 
 export const deleteQuestion = (req: Request, res: Response) => {
