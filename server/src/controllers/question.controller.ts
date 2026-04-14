@@ -38,9 +38,31 @@ export const getQuestionById = async (req: Request, res: Response, next: NextFun
 
 // 2. Méthodes protégés 
 
-export const createQuestion = (req: Request, res: Response) => {
-    // TODO : Créer une question de la requête du client et l'ajouter à la table des questions
-    res.status(200).json({message: "Bouchon: Route createQuestion OK"});
+// Créer une nouvelle question (Réservé aux Admins normalement)
+export const createQuestion = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { title, possibleAnswers, correctAnswer, difficulty, categoryId } = req.body;
+
+        // Première validation 
+        if (!title || !possibleAnswers || !Array.isArray(possibleAnswers)) {
+            return res.status(400).json({ error: "Le titre et un tableau de réponse possibles sont requis."});
+        }
+
+        const newQuestion = await Question.create({
+            title,
+            possibleAnswers,
+            correctAnswer, // Peut être null si question piège
+            difficulty: difficulty || 1,
+            categoryId
+        });
+
+        return res.status(201).json({
+            message: "Question créée avec succès !",
+            question: newQuestion
+        });
+    } catch(error) {
+        next(error);
+    }
 };
 
 export const updateQuestion = (req: Request, res: Response) => {
