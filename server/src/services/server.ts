@@ -1,6 +1,9 @@
 import express, { type Application, type Request, type Response} from 'express'; 
 import userRoutes from "../routes/userRoutes"; // Importation de la route user
 import adminRoutes from "../routes/adminRoutes"; // Importation de la route admin
+import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
+import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
+import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
 import sequelize from "../config/database";
 import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
@@ -64,8 +67,15 @@ app.use(adminRoutes);
 // Mise en pause de l'ancienne route
 // app.use(authRoutes);
 app.use(profileRoutes);
+<<<<<<< HEAD
 // Import route authentification 
 
+=======
+// NOUVEAU : Utilisations des nouvelles routes pour le quiz
+app.use(authentificationRoutes);
+app.use(questionRoutes);
+app.use(scoreRoutes);
+>>>>>>> dev
 
 async function startApp() {
     try {

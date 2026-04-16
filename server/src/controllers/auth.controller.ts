@@ -51,40 +51,23 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const { email, password } = req.body;
 
-        // ! Débogage avec postman
-        console.log("1. Email reçu depuis Postman :", email);
-        console.log("2. Mot de passe reçu depuis Postman :", password);
-
         // Vérification de la présence des champs
         if (!email || !password) {
             return res.status(400).json({ error: "Email et mot de passe requis."});
         }
 
-        // * Simulation d'un utilisateur virtuelle en attendant le modèle user 
-        // La requête est mise en commentaire en attendant
-        // const user: any = await User.findOne({ where: { email } });
+        // Chercher l'utilisateur en base de données avec Sequelize
+        const user: any = await User.findOne({ where: { email } });
 
-        // Création du faux utilisateur : 
-        const user = {
-            id: 1, 
-            email: "test@quiz.com",
-            pseudo: "TesteurFou",
-            // Utilisation du hash généré par bcrypt pour le mot de passe : "password123"
-            password: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjIQG8.RMG"
-        }
-
-        // Pour le test, si on n'essaie pas de se connecter avec test@quiz.com, on simule une erreur
-        if (email !== user.email) {
+        if (!user) {
+            // Règle de sécurité : on reste toujours vague sur l'erreur (on ne dit pas si c'est l'email ou le mdp qui est faux)
             return res.status(401).json({ error: "Identifiants incorrects." });
         }
 
         // Comparer le mot de passe reçu avec celui haché en base de données
-        // ! On met en pause le JWT, on test juste l'accès
-        // const isPasswordValid = await bcrypt.compare(password, user.password);
-        const isPasswordValid = true;
+        const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
-            console.log("ERREUR : Le mot de passe ne correspond pas !")
             return res.status(401).json({ error: "Identifiants incorrects."});
         }
 
