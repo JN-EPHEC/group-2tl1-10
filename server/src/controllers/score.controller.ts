@@ -22,3 +22,29 @@ export const getTopScores = async (req: Request, res: Response, next: NextFuncti
         next(error);
     }
 };
+
+// Enregistrer un score (Fin de partie)
+export const saveScore = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { totalScore, userId } = req.body;
+
+        // Validation basique
+        if (totalScore === undefined || !userId) {
+            return res.status(404).json({ error: "Le score et l'ID de l'utilisateur sont requis."});
+        }  
+
+        // Création de la session en BDD
+        const newSession = await GameSession.create({
+            totalScore: totalScore,
+            status: 'FINISHED',
+            userId: userId
+        });
+
+        return res.status(201).json({
+            message: "Score enregistré avec succès !",
+            session : newSession
+        });
+    } catch(error) {
+        next(error);
+    }
+};
