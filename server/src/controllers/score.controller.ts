@@ -4,6 +4,7 @@ export const getTopScores = async (req: Request, res: Response, next: NextFuncti
     try {
         //code some shit in hereeeee
         const {scores} = req.body;
+
         let output:number[] = [];
         for(let score of scores){ //look through all scores
             if(output.length<10){
@@ -23,7 +24,8 @@ export const getTopScores = async (req: Request, res: Response, next: NextFuncti
                 }
             }
         }
-        return output;
+
+        return res.status(200).json({scores: output});
     } catch(error) {
         next(error);
     }
@@ -32,6 +34,9 @@ export const getTopScores = async (req: Request, res: Response, next: NextFuncti
 export const saveScore = async (req: Request, res: Response, next: NextFunction) => {
     try {
         //code some more shit over hereeeee c('.'c)
+        const { score } = req.body;
+        //code to save the score
+        return res.status(200).json({ message: "Score saved successfully" });
 
     } catch(error) {
         next(error);
