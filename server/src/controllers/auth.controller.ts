@@ -1,8 +1,7 @@
 import type { NextFunction, Request, Response} from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-// TODO : Importation du modèle sequelize des utilisateurs
-// import User from '../models/user.model';
+import User from '../models/user.model';
 
 // Inscription 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
