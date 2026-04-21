@@ -25,6 +25,12 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-export const getAllCategories = (req: Request, res: Response) => {
-    res.status(200).json({ message: "Méthode getAllCategories"});
+// Lister toues les catégories
+export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const categories = await Category.findAll();
+        return res.status(200).json(categories);
+    } catch(error) {
+        next(error);
+    }
 };
