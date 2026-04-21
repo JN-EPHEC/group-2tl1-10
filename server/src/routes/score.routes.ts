@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as scoreController from '../controllers/score.controller';
+import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -7,6 +8,6 @@ const router = Router();
 router.get('/', scoreController.getTopScores);
 
 // Enregistrer un score (protégé)
-router.post('/', scoreController.saveScore);
+router.post('/', verifyToken, scoreController.saveScore);
 
 export default router;

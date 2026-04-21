@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import * as categoryController from '../controllers/category.controller';
+import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// On écoute sur la racine de ce routeur
+// Lecture (Public)
 router.post('/', categoryController.createCategory);
-router.get('/', categoryController.getAllCategories);
+
+// Création (Protégé)
+router.get('/', verifyToken, categoryController.getAllCategories);
 
 export default router;
