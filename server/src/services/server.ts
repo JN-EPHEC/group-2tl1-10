@@ -5,6 +5,7 @@ import adminRoutes from "../routes/adminRoutes"; // Importation de la route admi
 import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
 import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
 import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
+import categoryRoutes from "../routes/category.routes"; // Importation de la route pour les categories 
 import sequelize from "../config/database";
 import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
@@ -62,6 +63,7 @@ app.use(profileRoutes);
 app.use('/api/auth', authentificationRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/scores', scoreRoutes);
+app.use('/api/categories', categoryRoutes);
 
 async function startApp() {
     try {
