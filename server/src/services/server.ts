@@ -1,6 +1,11 @@
+import 'dotenv/config';
 import express, { type Application, type Request, type Response} from 'express'; 
 import userRoutes from "../routes/userRoutes"; // Importation de la route user
 import adminRoutes from "../routes/adminRoutes"; // Importation de la route admin
+import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
+import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
+import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
+import categoryRoutes from "../routes/category.routes"; // Importation de la route pour les categories 
 import sequelize from "../config/database";
 import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
@@ -10,7 +15,6 @@ import cors from 'cors';
 import Database from '../config/database'; // Import de la classe
 import authRoutes from "../routes/authRoutes";
 import profileRoutes from "../routes/profileRoutes";
-import 'dotenv/config'
 import cookieParser from 'cookie-parser';
 
 const app: Application = express(); 
@@ -52,16 +56,21 @@ app.get('/api/hello/:name', (req: Request, res: Response) => {
 app.use('/api/users', userRoutes);
 // Ajoute du routeur, avec toutes les routes de adminRoutes qui utilisent '/api/admin/basic'
 app.use(adminRoutes);
-app.use(authRoutes);
+// Mise en pause de l'ancienne route
+// app.use(authRoutes);
 app.use(profileRoutes);
+// NOUVEAU : Utilisations des nouvelles routes pour le quiz
+app.use('/api/auth', authentificationRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/scores', scoreRoutes);
+app.use('/api/categories', categoryRoutes);
 
 async function startApp() {
     try {
-        // On met la base de donnée en pause pour le TP7
-        // await sequelize.authenticate();
-        // console.log('Connexion à SQLite établie');
-        // await sequelize.sync({ alter: true});
-        // console.log("Synchronisation terminé");
+        await sequelize.authenticate();
+        console.log('Connexion à SQLite établie');
+        await sequelize.sync({ alter: true});
+        console.log("Synchronisation terminé");
 
         // On lance juste le serveur Express
         app.listen(port, () => {
