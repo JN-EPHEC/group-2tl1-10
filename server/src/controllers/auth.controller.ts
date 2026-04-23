@@ -140,3 +140,29 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
         next(error);
     }
 };
+
+// Récupération du profil de l'utilisateur connecté (/me)
+export const getMe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // On récupère le token le header (on sait qu'il est là et valide grâce au middleware)
+        const token = req.headers.authorization!.split(' ')[1];
+
+        // On le décode pour lire ce qu'il contient
+        const decoded: any = jwt.decode(token);
+
+        // On va chercher l'utilisateur en BDD, mais on EXCLUT le mot de passe !
+        const user = await User.findByPk(decoded.id, {
+            attributes: ['id', 'pseudo', 'email']
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "Joueur introuvable dans la base de données." });
+        }
+
+        // On renvoie les infos au front-end
+        return res.status(200).json(user);
+
+    } catch(error) {
+        next(error);
+    }
+};
