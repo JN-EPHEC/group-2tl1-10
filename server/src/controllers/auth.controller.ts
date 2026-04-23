@@ -71,10 +71,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         }
 
         // Générer l'Access Token (Durée très courte : 15 minutes)
-        const token = jwt.sign({ id: user.id, email: user.email }, 'SECRET_JWT', { expiresIn: '15m' });
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '15m' });
 
         // Générer le Refresh Token (Durée longue : 7 jours)
-        const refreshToken = jwt.sign({ id: user.id, email: user.email }, 'SECRET_REFRESH', { expiresIn: '7d' }); 
+        const refreshToken = jwt.sign({ id: user.id, email: user.email }, process.env.REFRESH_SECRET as string, { expiresIn: '7d' }); 
 
         // Envoyer le Refresh Token dans le cookie HttpOnly
         res.cookie('refreshToken', refreshToken, {
@@ -109,7 +109,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
         }
 
         // Vérifier la validité mathématique du Refresh Token
-        jwt.verify(incomingRefreshToken, 'SECRET_REFRESH', async (err: any, decoded: any) => {
+        jwt.verify(incomingRefreshToken, process.env.REFRESH_SECRET as string, async (err: any, decoded: any) => {
             if (err) {
                 // Si le token est expiré ou falsifié, on refuse l'accès
                 return res.status(403).json({ error: "Refresh token invalide ou expiré. Veuillez vous reconnecter." });
@@ -125,7 +125,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
             // Générer un NOUVEAU token d'accès tout frais
             const newAccessToken = jwt.sign(
                 { id: user.id, email: user.email },
-                'SECRET_JWT',
+                process.env.JWT_SECRET as string,
                 { expiresIn: '15m' }
             );
 
