@@ -17,24 +17,62 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth' 
 
 // Variables pour stocker ce que l'utilisateur tape
 const email = ref('')
 const password = ref('')
+const pseudo = ref('') // Nouveau champ pour l'inscription
 
 // Le routeur permet de naviguer entre les pages
 const router = useRouter()
+const authStore = useAuthStore()
 
-const handleLogin = () => {
-    console.log("Tentative de login avec :", email.value, password.value)
-    // TODO: Appeler notre Backend ici plus tard !
-    router.push('/') // Redirige vers la page d'accueil
+// --- CONNEXION ---
+const handleLogin =  async () => {
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.value, password: password.value })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) throw new Error(data.error)
+
+        // Sauvegarde du token et de toutes les informations
+        authStore.saveAuth(data.token, data.user)
+        console.log("Connecté avec succès !", data)
+        router.push('/')
+
+    } catch(error: any) {
+        alert("Erreur: " + error.message)
+    }
 }
 
-const handleRegister = () => {
-    console.log ("Tentative de création de compte avec :", email.value, password.value)
-    // TODO: Appeler notre Backend ici plus tard !
-    router.push('/')
+// --- INSCRIPTION ---
+const handleRegister = async () => {
+    if (!pseudo.value) {
+        alert("Met un pseudo pour t'inscrire, stp !")
+        return
+    }
+
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.value, password: password.value, pseudo: pseudo.value })
+        })
+
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error)
+
+        alert("Compté créé ! Tu peux maintenant de connecter.")
+
+    } catch(error: any) {
+        alert("Erreur: " + error.message)
+    }
 }
 
 const goToBruh = () => {
