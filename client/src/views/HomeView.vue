@@ -1,0 +1,1 @@
+<template><h1>Accueil en construction</h1></template>
