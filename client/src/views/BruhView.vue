@@ -5,23 +5,21 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// onMounted s'exécute dès que la page apparaît à l'écran
 onMounted(() => {
-    // On récupère un son "bruh" classique depuis internet (à télécharger plus tard)
-    const bruhSound = new Audio('https://www.myinstants.com/media/sounds/movie_1.mp3')
-
-    // * REMARQUE : Certains navigateurs peuvent ne pas jouer le son par défaut 
-    bruhSound.play().catch(error => console.log("Le navigateur a bloqué le son autoplay :(", error))
+  const bruhSound = new Audio('https://www.myinstants.com/media/sounds/movie_1.mp3')
+  bruhSound.play().catch(e => console.log("Son bloqué", e))
 })
 
+// C'est cette fonction qui fait marcher le bouton !
 const goBack = () => {
-    router.push('/login')
+  console.log("Retour au login...")
+  router.push('/login')
 }
 </script>
 
