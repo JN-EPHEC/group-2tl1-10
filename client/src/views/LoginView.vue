@@ -28,6 +28,10 @@
       
       <button class="bruh-btn" @click="goToBruh">there is no other option</button>
     </div>
+
+    <!-- BOUTON DE RETOUR -->
+     <button class="back-home-btn" @click="goToHome">👈 nvm, take me home</button>
+
   </div>
 </template>
 
@@ -97,6 +101,10 @@ const handleRegister = async () => {
 const goToBruh = () => {
   router.push('/bruh')
 }
+
+const goToHome = () => {
+    router.push('/')
+}
 </script>
 
 <style scoped>
@@ -151,4 +159,19 @@ button:hover {
   margin-top: 1rem;
   border: 2px dashed red;
 }
-</style>git 
+
+.back-home-btn {
+    margin-top: 2rem;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    color: #666;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-home-btn:hover {
+    color: black;
+}
+</style>

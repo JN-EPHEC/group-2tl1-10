@@ -25,19 +25,21 @@
 
       <!-- Section du bas : Connexion ou Profil -->
       <div class="bottom-section">
-        <!-- V-IF : Si l'utilisateur n'est PAS connecté -->
+        <!-- V-IF : Si l'utilisateur n'est PAS connecté, on montre SEULEMENT ce bouton -->
         <button v-if="!authStore.isLoggedIn" class="login-btn" @click="goToLogin">
           log in
         </button>
 
-        <!-- V-ELSE : Si l'utilisateur EST connecté -->
-        <div v-else class="logged-in-box">
-          logged in as &lt;{{ authStore.user?.pseudo }}&gt;
+        <!-- V-ELSE : Si l'utilisateur EST connecté, on montre ce BLOC ENTIER -->
+        <div v-else class="logged-in-container">
+          <div class="logged-in-box">
+            logged in as &lt;{{ authStore.user?.pseudo }}&gt;
+          </div>
+          <!-- Le bouton de déconnexion est bien caché DANS le bloc connecté -->
+          <button class="logout-btn" @click="handleLogout">
+            get me outta here
+          </button>
         </div>
-        <!-- BOUTON DE DECONNEXION -->
-        <button class="logout-btn" @click="handleLogout">
-          get me outta here
-        </button>
       </div>
     </div>
   </div>
