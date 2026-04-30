@@ -26,13 +26,13 @@
       <!-- Section du bas : Connexion ou Profil -->
       <div class="bottom-section">
         <!-- V-IF : Si l'utilisateur n'est PAS connecté -->
-        <button v-if="!isLoggedIn" class="login-btn" @click="goToLogin">
+        <button v-if="!authStore.isLoggedIn" class="login-btn" @click="goToLogin">
           log in
         </button>
 
         <!-- V-ELSE : Si l'utilisateur EST connecté -->
         <div v-else class="logged-in-box">
-          logged in as &lt;{{ currentUser }}&gt;
+          logged in as &lt;{{ authStore.user?.pseudo }}&gt;
         </div>
       </div>
 
@@ -43,8 +43,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // --- LE TITRE ALÉATOIRE (L'absurdité commence) ---
 const absurdTitles = [
@@ -62,15 +64,8 @@ onMounted(() => {
   currentTitle.value = absurdTitles[randomIndex]
 })
 
-
 // --- VARIABLES D'ÉTAT ---
 const displayName = ref('')
-
-// TODO: Plus tard, on lira ça depuis notre Backend/Pinia !
-// Pour tester l'affichage de l'encart, il faut passer isLoggedIn à true.
-const isLoggedIn = ref(false) 
-const currentUser = ref('LeBossDuQuiz')
-
 
 // --- NAVIGATION ---
 const goToLogin = () => {
