@@ -34,8 +34,11 @@
         <div v-else class="logged-in-box">
           logged in as &lt;{{ authStore.user?.pseudo }}&gt;
         </div>
+        <!-- BOUTON DE DECONNEXION -->
+        <button class="logout-btn" @click="handleLogout">
+          get me outta here
+        </button>
       </div>
-
     </div>
   </div>
 </template>
@@ -67,9 +70,14 @@ onMounted(() => {
 // --- VARIABLES D'ÉTAT ---
 const displayName = ref('')
 
-// --- NAVIGATION ---
+// --- NAVIGATION & ACTIONS ---
 const goToLogin = () => {
   router.push('/login')
+}
+
+// Déconnecter l'utilisateur
+const handleLogout = () => {
+  authStore.logout()
 }
 </script>
 
@@ -161,5 +169,26 @@ const goToLogin = () => {
   border: 1px solid black;
   font-family: monospace; /* Pour le style <user> un peu hackerman */
   font-size: 1.2rem;
+}
+
+.logged-in-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px dashed red;
+  background-color: transparent;
+  color: red;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #ffe6e6;
 }
 </style>
