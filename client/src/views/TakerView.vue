@@ -17,6 +17,10 @@
                 <button class="join-btn" @click="handleJoinRoom">join</button>
               </div>
 
+              <button v-if="!hasJoined" class="back-home-btn" @click="goToHome">
+                👈 nvm, take me home
+              </button>
+
               <!-- SECTION 2 : L'ATTENTE CHAOTIQUE -->
                <div v-else class="waiting-section">
                 <!-- Le cadre intérieur "Players" -->
@@ -64,6 +68,10 @@ const handleJoinRoom = () => {
     console.log("Tentative de rejoindre la room:", roomCode.value)
     // TODO: Plus tard, on connectera Socket.io ici !
     hasJoined.value = true // Simulation temporaire d'une connexion réussie
+}
+
+const goToHome = () => {
+    router.push('/')
 }
 </script>
 
@@ -174,7 +182,7 @@ const handleJoinRoom = () => {
 .pos-6 { transform: translate(-40px, -15px); }/* ethan */
 .pos-7 { transform: translate(60px, 10px); }  /* fatima */
 .pos-8 { transform: translate(20px, -30px); } /* gerald */
-.pos-9 { transform: translate(-10px, 50px); } /* howard */
+.pos-9 { transform: translate(15px, 10px); } /* howard */
 
 .waiting-msg {
     font-style: italic;
@@ -189,5 +197,20 @@ const handleJoinRoom = () => {
     border: 1px solid #999;
     cursor: pointer;
     color: #666;
+}
+
+.back-home-btn {
+    background: none;
+    border: none;
+    text-decoration: underline;
+    color: #666;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    margin-top: 1rem;
+}
+
+.back-home-btn:hover {
+    color: black;
 }
 </style>
