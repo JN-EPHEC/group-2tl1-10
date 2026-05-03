@@ -13,7 +13,7 @@
 
         <!-- Côté Joueur -->
         <div class="role-column">
-          <button class="big-btn">I'm a quiz taker</button>
+          <button class="big-btn" @click="router.push('/taker')">I'm a quiz taker</button>
           <input 
             type="text" 
             v-model="displayName" 
