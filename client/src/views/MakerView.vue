@@ -31,8 +31,7 @@ const goToNewQuiz = () => {
 }
 
 const goToMyQuizzes = () => {
-    console.log("Direction la liste des quiz existants...")
-    // router.push('/maker/list')
+    router.push('/maker/list')
 }
 
 // Le bouton de retour vers l'accueil 
