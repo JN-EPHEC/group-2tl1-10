@@ -8,7 +8,7 @@
       <div class="roles-container">
         <!-- Côté Créateur -->
         <div class="role-column">
-          <button class="big-btn">I'm a quiz maker</button>
+          <button class="big-btn" @click="router.push('/maker')">I'm a quiz maker</button>
         </div>
 
         <!-- Côté Joueur -->
