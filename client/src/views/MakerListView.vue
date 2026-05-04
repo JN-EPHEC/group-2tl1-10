@@ -14,7 +14,7 @@
 
         <!-- Boucle sur les quiz -->
         <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-row">
-          <span class="quiz-name">{{ quiz.title }}</span>
+          <span class="quiz-name">{{ quiz.name }}</span>
           <button class="edit-btn" @click="editQuiz(quiz.id)">edit</button>
         </div>
 
@@ -43,7 +43,6 @@ const quizzes = ref<any[]>([])
 // Dès que la page s'affiche, on interroge le backend
 onMounted(async () => {
   try {
-    // Attention : Assure-toi que cette route correspond bien à ton backend !
     const response = await fetch('/api/categories', {
       headers: {
         // C'est ICI qu'on prouve qui on est au backend grâce au token !
