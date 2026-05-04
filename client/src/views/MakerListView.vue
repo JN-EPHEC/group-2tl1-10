@@ -53,29 +53,13 @@ onMounted(async () => {
     if (response.ok) {
       const data = await response.json()
       quizzes.value = data
-      
-      // Si la base de données est vide, on met des fausses données pour tester le design
-      if (quizzes.value.length === 0) {
-        loadMockData()
-      }
     } else {
-      console.warn("Le backend a renvoyé une erreur, chargement des fausses données.")
-      loadMockData()
+      console.error("Erreur serveur lors de la récupération des quiz.")
     }
   } catch (error) {
-    console.error("Erreur de connexion au backend, chargement des fausses données.", error)
-    loadMockData()
+    console.error("Impossible de contacter le backend", error)
   }
 })
-
-// Fonction de secours pour afficher le design de la maquette quoiqu'il arrive
-const loadMockData = () => {
-  quizzes.value = [
-    { id: 1, title: 'Quiz name 1' },
-    { id: 2, title: 'Quiz name 2' },
-    { id: 3, title: 'Quiz name 3' }
-  ]
-}
 
 const editQuiz = (quizId: number) => {
   console.log("Direction l'éditeur pour le quiz n°", quizId)
