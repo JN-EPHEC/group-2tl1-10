@@ -2,8 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { Category } from '../models/category.model';
 import { Question } from '../models/question.model';
 import { Answer } from '../models/playerAnswer.model'
-// TODO : Nouvelle table pour les paramètres a créer et à importer
-// import { Setting } from '../models/setting.model'
+import { Setting } from '../models/setting.model'
 
 // Créer une catégorie
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
