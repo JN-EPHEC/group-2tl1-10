@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { Category } from '../models/category.model';
-import { Question } from '../models/question.model';
-import { Setting } from '../models/setting.model'
+import Category from '../models/category.model';
+import Question from '../models/question.model';
+import Setting from '../models/setting.model'
 
 // Créer une catégorie
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
