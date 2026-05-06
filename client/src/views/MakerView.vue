@@ -27,7 +27,7 @@ const router = useRouter()
 // on créera les interfaces correspondantes plus tard ! 
 const goToNewQuiz = () => {
     console.log("Direction la création d'un nouveau quiz...")
-    // router.push('/maker/new')
+    router.push('/maker/edit')
 }
 
 const goToMyQuizzes = () => {

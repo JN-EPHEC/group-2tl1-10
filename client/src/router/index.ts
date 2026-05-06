@@ -6,6 +6,7 @@ import BruhView from '../views/BruhView.vue'
 import TakerView from '../views/TakerView.vue'
 import MakerView from '../views/MakerView.vue'
 import MakerListView from '../views/MakerListView.vue'
+import MakerEditView from '../views/MakerEditView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,7 +16,8 @@ const router = createRouter({
     { path: '/bruh', name: 'bruh', component: BruhView },
     { path: '/taker', name: 'taker', component: TakerView },
     { path: '/maker', name: 'maker', component: MakerView, meta: { requiresAuth: true } },
-    { path: '/maker/list', name: 'maker-list', component: MakerListView, meta: { requiresAuth: true } }
+    { path: '/maker/list', name: 'maker-list', component: MakerListView, meta: { requiresAuth: true } },
+    { path: '/maker/edit', name: 'maker-edit', component: MakerEditView, meta: { requiresAuth: true } }
   ]
 })
 
