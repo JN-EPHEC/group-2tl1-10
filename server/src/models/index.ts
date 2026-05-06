@@ -25,4 +25,8 @@ PlayerAnswer.belongsTo(Question, { foreignKey: 'questionId', as: 'question' });
 Question.hasOne(Setting, { foreignKey: 'questionId', as: 'settings' });
 Setting.belongsTo(Question, { foreignKey: 'questionId' });
 
+// Relations User <-> Category
+User.hasMany(Category, { foreignKey: 'userId', as: 'categories' });
+Category.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 export { User, Category, Question, GameSession, PlayerAnswer };

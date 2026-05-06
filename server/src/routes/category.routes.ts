@@ -4,10 +4,10 @@ import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// Lecture (Public)
-router.post('/', categoryController.createCategory);
+// Lecture
+router.post('/', verifyToken, categoryController.createCategory);
 
-// Création (Protégé)
+// Création
 router.get('/', verifyToken, categoryController.getAllCategories);
 
 export default router;

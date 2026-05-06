@@ -17,6 +17,9 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         // On extrait le secret de manière sécurisée et on rassure TypeScript avec "as string"
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
 
+        // On attache les infos décodées à la requête pour que le contrôleur puisse s'en servir
+        (req as any).user = decoded;
+        
         // Tout est bon, le videur ouvre la porte vers le contrôleur
         next();
     } catch(error) {

@@ -69,7 +69,7 @@ async function startApp() {
     try {
         await sequelize.authenticate();
         console.log('Connexion à SQLite établie');
-        await sequelize.sync({ alter: true});
+        await sequelize.sync({ alter: true });
         console.log("Synchronisation terminé");
 
         // On lance juste le serveur Express

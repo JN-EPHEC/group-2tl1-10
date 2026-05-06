@@ -8,12 +8,14 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
     try {
         const { name, description, questions } = req.body;
 
+        const userId = (req as any).user.id;
+
         if (!name) {
             return res.status(400).json({ error: "Le nom de la catégorie est obligatoire." });
         }
 
         // Sauvegarde du Quiz (Category/Quiz)
-        const newCategory = await Category.create({ name, description });
+        const newCategory = await Category.create({ name, description, userId });
 
         // On vérifie si le frontend a bien envoyé des questions
         if (questions && Array.isArray(questions) && questions.length > 0) {
@@ -64,7 +66,10 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 // Lister toues les catégories
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const categories = await Category.findAll();
+        const userId = (req as any).user.id;
+        const categories = await Category.findAll({
+            where: { userId: userId }
+        });
         return res.status(200).json(categories);
     } catch(error) {
         next(error);
