@@ -229,12 +229,19 @@ const saveQuizToBackend = async () => {
   // Petite vérification de sécurité absurde
   if (quizDraft.value.name === '' || quizDraft.value.questions.length === 0) {
     alert("Bruh... Tu ne peux pas sauvegarder un quiz sans nom et sans questions !")
-    return
+    return;
   }
 
+  // On détermine si c'est une édition ou une création
+  const isEditing = quizDraft.value.id !== null;
+  const url = isEditing
+    ? `/api/categories/${quizDraft.value.id}`
+    : `/api/categories`;
+  const method = isEditing ? 'PUT' : 'POST'
+
   try {
-    const response = await fetch('/api/categories', { // A Remplacer par la bonne route de création du backend
-      method: 'POST',
+    const response = await fetch(url, { // A Remplacer par la bonne route de création du backend
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authStore.token}` // On prouve qu'on est le créateur !
@@ -243,18 +250,17 @@ const saveQuizToBackend = async () => {
     })
 
     if (response.ok) {
-      alert("C'est dans la boîte ! Le backend a dit OUI.")
-      hasUnsavedChanges.value = false
-      router.push('/maker/list')
+      alert(isEditing ? "Quiz mis à jour !" : "Quiz créé !");
+      hasUnsavedChanges.value = false;
+      router.push('/maker/list');
     } else {
       const errorData = await response.json()
-      alert("Le backend a rejeté ton chef-d'œuvre : " + errorData.message)
+      alert("Erreur : " + errorData.error);
     }
   } catch (error) {
-    alert("Erreur fatale, le serveur est probablement en PLS.")
-    console.error(error)
+    console.error("Erreur lors de la sauvegarde :", error);
   }
-}
+};
 </script>
 
 <style scoped>

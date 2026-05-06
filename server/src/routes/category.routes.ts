@@ -12,4 +12,7 @@ router.get('/', verifyToken, categoryController.getAllCategories);
 // Route pour obtenir un quiz par ID
 router.get('/:id', verifyToken, categoryController.getCategoryById);
 
+// Route pour mettre à jour un quiz
+router.put('/:id', verifyToken, categoryController.updateCategory);
+
 export default router;

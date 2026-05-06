@@ -104,3 +104,52 @@ export const getCategoryById = async (req: Request, res: Response, next: NextFun
         next(error);
     }
 };
+
+// Route pour metre à jour les données d'un quiz
+export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { name, description, questions } = req.body;
+        const userId = (req as any).user.id;
+
+        // Vérifier que le quiz appartient bien à l'utilisateur
+        const category = await Category.findOne({ where: { id, userId } });
+        if (!category) {
+            return res.status(404).json({ error: "Quiz introuvable ou accès refusé." });
+        }
+
+        // Mettre à jour les infos de base (Nom, Desc)
+        await category.update({ name, description });
+
+        // MISE À JOUR DES QUESTIONS : La méthode "Clean & Replace"
+        await Question.destroy({ where: { categoryId: id } });
+
+        // On ré-insère les questions envoyées
+        if (questions && Array.isArray(questions)) {
+            for (const q of questions) {
+                const answerTexts = q.answers.map((ans: any) => ans.text);
+                const correctAns = q.answers.find((ans: any) => ans.isCorrect);
+                const correctAnswerText = correctAns ? correctAns.text : null;
+
+                const newQuestion = await Question.create({
+                    title: q.text,
+                    possibleAnswers: answerTexts,
+                    correctAnswer: correctAnswerText,
+                    categoryId: id, // L'id du quiz existant
+                    difficulty: 1
+                });
+
+                if (q.settings) {
+                    await Setting.create({
+                        ...q.settings, // On copie tous les champs des réglages
+                        questionId: newQuestion.id
+                    });
+                }
+            }
+        }
+
+        return res.status(200).json({ message: "Quiz mis à jour avec succès !" });
+    } catch (error) {
+        next(error);
+    }
+};
