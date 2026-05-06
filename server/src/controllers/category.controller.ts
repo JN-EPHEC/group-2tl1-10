@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import Category from '../models/category.model';
 import Question from '../models/question.model';
 import Setting from '../models/setting.model'
+import { error } from 'console';
 
 // Créer une catégorie
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
@@ -71,6 +72,34 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
             where: { userId: userId }
         });
         return res.status(200).json(categories);
+    } catch(error) {
+        next(error);
+    }
+};
+
+// Obtenir une catégorie par son ID
+export const getCategoryById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req as any).user.id;
+        const categoryId = req.params.id;
+
+        // On cherche le quiz, et on INCLUT ses questions et paramètre 
+        const category = await Category.findOne({
+            where: { id: categoryId, userId: userId },
+            include: [
+                {
+                    model: Question,
+                    as: 'questions',
+                    include: [{ model: Setting, as: 'settings' }]
+                }
+            ]
+        });
+
+        if (!category) {
+            return res.status(404).json({ error: "Quiz introuvable ou vous n'êtes pas le propriétaire." });
+        }
+
+        return res.status(200).json(category);
     } catch(error) {
         next(error);
     }

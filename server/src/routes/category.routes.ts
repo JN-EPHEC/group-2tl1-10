@@ -9,5 +9,7 @@ router.post('/', verifyToken, categoryController.createCategory);
 
 // Création
 router.get('/', verifyToken, categoryController.getAllCategories);
+// Route pour obtenir un quiz par ID
+router.get('/:id', verifyToken, categoryController.getCategoryById);
 
 export default router;

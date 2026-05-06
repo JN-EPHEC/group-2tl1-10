@@ -99,13 +99,69 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter, onBeforeRouteLeave } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const hasUnsavedChanges = ref(true)
+
+const quizDraft = ref ({
+  id: null as number | null, // Ajout de l'ID au brouillon pour savoir si c'est une édition
+  name: '',
+  questions: [] as any[]
+})
+
+// Chargment des formulaires avec les données du quiz en édition 
+onMounted(async () => {
+  const quizId = route.params.id
+
+  if (quizId) {
+    try {
+      const response = await fetch(`/api/categories/${quizId}`, {
+        headers: { 'Authorization': `Bearer ${authStore.token}` }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+
+        // On rempli le nom et l'ID
+        quizDraft.value.id = data.id
+        quizDraft.value.name = data.name
+
+        // On traduit les questions du Backend vers le Frontend
+        if (data.questions) {
+          quizDraft.value.questions = data.questions.map((q: any) => {
+            return {
+              id: q.id,
+              text: q.title,
+              timeLimit: q.difficulty, // En attendant d'avoir un vrai timeLimit en base
+
+              // On reconstruit le tableau de réponse : 
+              answers: q.possibleAnswers.map((ansText: string) => ({
+                text: ansText,
+                isCorrect: ansText === q.correctAnswer // C'est la bonne si le texte correspond
+              })),
+
+              // On récupère les paramètres ou on met des valeurs par défaut 
+              settings: q.settings || {
+                rageQuit: false, secretBouton: false, scoreMultiplier: 1,
+                winSound: '', firstWinSound: '', loseSound: '', firstLoseSound: ''
+              }
+            }
+          })
+        }
+
+        // Comme on vient de charger les données, il n'y a pas encore de modifs non sauvegardées !
+        hasUnsavedChanges.value = false
+      }
+    } catch(error) {
+      console.error("Erreur de chargement du quiz", error)
+    }
+  }
+})
 
 const goBack = () => {
   router.push('/maker')
@@ -127,12 +183,6 @@ const activeQuestionIndex = ref<number>(0)
 
 // Raccourci pour accéder facilement à la question en cours d'édition
 const activeQ = computed(() => quizDraft.value.questions[activeQuestionIndex.value])
-
-// --- LE BROUILLON GLOBAL ---
-const quizDraft = ref({
-  name: '',
-  questions: [] as any[]
-})
 
 // --- ACTIONS QUIZ ---
 const addQuestion = () => {

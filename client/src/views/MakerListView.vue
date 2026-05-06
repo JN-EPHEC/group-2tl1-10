@@ -63,8 +63,7 @@ onMounted(async () => {
 
 const editQuiz = (quizId: number) => {
   console.log("Direction l'éditeur pour le quiz n°", quizId)
-  // TODO: On branchera ça vers la page d'édition plus tard !
-  // router.push(`/maker/edit/${quizId}`)
+  router.push(`/maker/edit/${quizId}`)
 }
 
 const goBack = () => {
