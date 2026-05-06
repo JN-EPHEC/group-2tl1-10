@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Category } from '../models/category.model';
 import { Question } from '../models/question.model';
-import { Answer } from '../models/playerAnswer.model'
 import { Setting } from '../models/setting.model'
 
 // Créer une catégorie
@@ -20,36 +19,31 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
         if (questions && Array.isArray(questions) && questions.length > 0) {
 
             for (const q of questions) {
-                // Sauvegarde des questions 
+                const answerTexts = q.answers.map((ans: any) => ans.text);
+
+                const correctAns = q.answers.find((ans: any) => ans.isCorrect);
+                const correctAnswerText = correctAns ? correctAns.text : null;
+
                 const newQuestion = await Question.create({
-                    text: q.text,
-                    timeLimit: q.timeLimit,
-                    categoryId: newCategory.id // Clé étrangère permettant la relation
+                    title: q.text,
+                    possibleAnswers: answerTexts,
+                    correctAnswer: correctAnswerText,
+                    categoryId: newCategory.id,
+                    difficulty: 1
+                    // TODO : Ajouter time limit pour le temps
                 });
 
-                // Sauvegarde des réponses
-                if (q.answers && Array.isArray(q.answers)) {
-                    for (const ans of q.answers) {
-                        await Answer.create({
-                            text: ans.text,
-                            isCorrect: ans.isCorrect,
-                            questionId : newQuestion.id // Clé étrangère permettant de relier à la question 
-                        });
-                    }
-                }
-
-                // Sauvegarde des paramètres (sons, rage quit...)
                 if (q.settings) {
                     await Setting.create({
                         rageQuit: q.settings.rageQuit,
                         secretButton: q.settings.secretButton,
                         scoreMultiplier: q.settings.scoreMultiplier,
-                        winSound: q.settings.winSound, 
+                        winSound: q.settings.winSound,
                         firstWinSound: q.settings.firstWinSound,
                         loseSound: q.settings.loseSound,
                         firstLoseSound: q.settings.firstLoseSound,
-                        questionId: newQuestion.id // Clé étrangère avec la question
-                    });
+                        questionId: newQuestion.id // Clé étrangère de la question
+                    })
                 }
             }
         }
