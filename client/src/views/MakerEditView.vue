@@ -94,6 +94,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+
+const authStore = useAuthStore()
 
 // --- GESTION DE L'AFFICHAGE ---
 // Permet de naviguer entre les 3 interfaces sans changer d'URL
@@ -150,10 +153,33 @@ const deleteAnswer = (index: number) => {
 }
 
 // --- SAUVEGARDE FINALE ---
-const saveQuizToBackend = () => {
-  console.log("Données prêtes à être envoyées au backend :", quizDraft.value)
-  alert("Regarde la console, tout l'objet est prêt !")
-  // TODO: Fera un POST /api/categories avec le token ici !
+const saveQuizToBackend = async () => {
+  // Petite vérification de sécurité absurde
+  if (quizDraft.value.name === '' || quizDraft.value.questions.length === 0) {
+    alert("Bruh... Tu ne peux pas sauvegarder un quiz sans nom et sans questions !")
+    return
+  }
+
+  try {
+    const response = await fetch('/api/categories', { // A Remplacer par la bonne route de création du backend
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}` // On prouve qu'on est le créateur !
+      },
+      body: JSON.stringify(quizDraft.value) // On envoie notre gros objet JSON
+    })
+
+    if (response.ok) {
+      alert("C'est dans la boîte ! Le backend a dit OUI.")
+    } else {
+      const errorData = await response.json()
+      alert("Le backend a rejeté ton chef-d'œuvre : " + errorData.message)
+    }
+  } catch (error) {
+    alert("Erreur fatale, le serveur est probablement en PLS.")
+    console.error(error)
+  }
 }
 </script>
 
