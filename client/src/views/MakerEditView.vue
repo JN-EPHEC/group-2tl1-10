@@ -4,6 +4,12 @@
 
       <!-- ÉCRAN 1 : L'ÉDITEUR DU QUIZ -->
       <div v-if="currentScreen === 'quiz'" class="screen-quiz">
+
+        <!-- Bouton de retour -->
+        <button class="fraud-btn" @click="goBack" style="margin-bottom: 2rem;">
+          👈 Back to Maker Dashboard
+        </button>
+
         <input type="text" v-model="quizDraft.name" class="dashed-input title-input" placeholder="Quiz name" />
 
         <div class="questions-list">
@@ -94,9 +100,25 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
+const hasUnsavedChanges = ref(true)
+
+const goBack = () => {
+  router.push('/maker')
+}
+
+onBeforeRouteLeave((to, from) => {
+  if (hasUnsavedChanges.value) {
+    const answer = window.confirm("Hold up! Tu as des modifications non sauvegardés. Veux-tu vraiment abandonner ?")
+    if (!answer) {
+      return false;
+    }
+  }
+})
 
 // --- GESTION DE L'AFFICHAGE ---
 // Permet de naviguer entre les 3 interfaces sans changer d'URL
@@ -172,6 +194,8 @@ const saveQuizToBackend = async () => {
 
     if (response.ok) {
       alert("C'est dans la boîte ! Le backend a dit OUI.")
+      hasUnsavedChanges.value = false
+      router.push('/maker/list')
     } else {
       const errorData = await response.json()
       alert("Le backend a rejeté ton chef-d'œuvre : " + errorData.message)
