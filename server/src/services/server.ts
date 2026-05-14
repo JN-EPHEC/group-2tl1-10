@@ -97,19 +97,59 @@ const io = new Server(httpServer, {
     }
 });
 
+// Création d'un dictonnaire "en mémoire" pour stocker les parties en cours
+const activeGames: Record<string, any> = {};
+
 // Ecoute des la connexions des joueurs
 io.on("connection", (Socket) => {
-    console.log(`Un nouvel utilisateur est connecté : ${Socket.id}`);
+    console.log(`Nouvelle connexion : ${Socket.id}`);
 
-    // Test : si le client envoie un "ping", on répond "ping"
-    Socket.on("ping", () => {
-        console.log("Ping reçu !");
-        Socket.emit("pong", "Pong depuis le serveur !");
+    // Le créateur lance le lobby
+    Socket.on("create_game", (quizId, callback) => {
+        // On génère un code 4 chiffres
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // On enregistre la salle
+        activeGames[roomCode] = {
+            hostId: Socket.id,
+            quizId: quizId,
+            players: []
+        };
+
+        // Le créateur rejoint virtuellement la "Room" Socket.io
+        Socket.join(roomCode);
+
+        console.log(`Partie créée : Code ${roomCode} pour le Quiz ${quizId}`);
+
+        // On renvoie le code au frontend du créateur
+        callback({ roomCode });
+    });
+
+    // Un joueur rejoint le lobby
+
+    Socket.on("join_game", (data, callback) => {
+        const { roomCode, username } = data;
+
+        // On vérifie si la salle existe
+        if (activeGames[roomCode]) {
+            Socket.join(roomCode); // Le joueur rejoint la Room
+
+            // Ajout du joueur à la liste des joueurs
+            activeGames[roomCode].players.push({ id: Socket.id, username });
+
+            // On prévient le créateur : on envoie l'événemnt au hostId (le créateur)
+            Socket.to(activeGames[roomCode].hostId).emit("player_joined", username);
+
+            callback(({ success: true }));
+        } else {
+            callback({ success: false, message: "Code introuvable. Bruh." });
+        }
     });
 
     Socket.on("disconnect", () => {
-        console.log(`L'utilisateur ${Socket.id} s'est déconnecté`);
-    });
+        console.log(`Déconnexion : ${Socket.id}`);
+        // TODO plus tard : Gérer la déconnexion d'un joueur ou du créateur s
+    })
 });
 
 const PORT = process.env.PORT || 3000;

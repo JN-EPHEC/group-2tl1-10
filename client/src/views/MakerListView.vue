@@ -15,7 +15,10 @@
         <!-- Boucle sur les quiz -->
         <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-row">
           <span class="quiz-name">{{ quiz.name }}</span>
-          <button class="edit-btn" @click="editQuiz(quiz.id)">edit</button>
+          <div class="row-buttons">
+            <button class="action-btn" @click="playQuiz(quiz.id)">play</button>
+            <button class="edit-btn" @click="editQuiz(quiz.id)">edit</button>
+          </div>
         </div>
 
         <!-- Les petits points de la maquette -->
@@ -60,6 +63,10 @@ onMounted(async () => {
     console.error("Impossible de contacter le backend", error)
   }
 })
+
+const playQuiz = (quizId: number) => {
+  router.push(`/maker/lobby/${quizId}`)
+}
 
 const editQuiz = (quizId: number) => {
   console.log("Direction l'éditeur pour le quiz n°", quizId)
