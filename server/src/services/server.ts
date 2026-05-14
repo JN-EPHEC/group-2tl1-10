@@ -16,6 +16,10 @@ import Database from '../config/database'; // Import de la classe
 import authRoutes from "../routes/authRoutes";
 import profileRoutes from "../routes/profileRoutes";
 import cookieParser from 'cookie-parser';
+import { createServer } from 'http'; // Import création serveur pour le multijoueurs
+import { Server } from 'socket.io'; // Import des sockets
+import { create } from 'domain';
+import { Socket } from 'dgram';
 
 const app: Application = express(); 
 const port = 3000; 
@@ -72,9 +76,9 @@ async function startApp() {
         await sequelize.sync({ alter: true });
         console.log("Synchronisation terminé");
 
-        // On lance juste le serveur Express
-        app.listen(port, () => {
-            console.log(`Serveur lancé sur http://localhost:${port}`);
+        // Changement pour httpServer.listen() pour lancer le serveur http
+        httpServer.listen(PORT, () => {
+            console.log(`Serveur prêt sur le port ${PORT}`);
         });
     } catch (error) {
         console.error('Erreur de connexion avec SQlite:', error);
@@ -82,5 +86,32 @@ async function startApp() {
 };
 
 app.use(errorHandler);
+
+// Création du serveur HTTP à partir de express
+const httpServer = createServer(app);
+// Attachment de Socket.io au serveur HTTP
+const io = new Server(httpServer, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Ecoute des la connexions des joueurs
+io.on("connection", (Socket) => {
+    console.log(`Un nouvel utilisateur est connecté : ${Socket.id}`);
+
+    // Test : si le client envoie un "ping", on répond "ping"
+    Socket.on("ping", () => {
+        console.log("Ping reçu !");
+        Socket.emit("pong", "Pong depuis le serveur !");
+    });
+
+    Socket.on("disconnect", () => {
+        console.log(`L'utilisateur ${Socket.id} s'est déconnecté`);
+    });
+});
+
+const PORT = process.env.PORT || 3000;
 
 startApp();

@@ -49,6 +49,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { socket } from '../services/socket'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -64,6 +65,14 @@ const absurdTitles = [
 const currentTitle = ref('')
 
 onMounted(() => {
+  // Connection au serveur
+  socket.connect();
+
+  // On écoute la réponse du serveur
+  socket.on("pong", (message) => {
+    console.log("Réponse du serveur :", message);
+    alert("Socket.io fonctionne !")
+  });
   // On choisit un titre au hasard au chargement de la page
   const randomIndex = Math.floor(Math.random() * absurdTitles.length)
   currentTitle.value = absurdTitles[randomIndex]
