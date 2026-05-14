@@ -18,7 +18,9 @@ import profileRoutes from "../routes/profileRoutes";
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http'; // Import création serveur pour le multijoueurs
 import { Server } from 'socket.io'; // Import des sockets
-import { Category, Question, Setting } from '../models';
+import Category from '../models/category.model';
+import Question from '../models/question.model';
+import Setting from '../models/setting.model';
 
 const app: Application = express(); 
 const port = 3000; 
@@ -152,10 +154,13 @@ io.on("connection", (Socket) => {
         try {
             // On récupère le quiz complet avec questions et réglages
             const quiz = await Category.findByPk(game.quizId, {
-                include: [{ 
-                    model: Question, 
-                    as: 'questions', 
-                    include: [{ model: Setting, as: 'settings' }] 
+                include: [{
+                    model: Question,
+                    as: 'questions',
+                    include: [{
+                        model: Setting,
+                        as: 'settings'
+                    }]
                 }]
             });
 
