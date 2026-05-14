@@ -62,9 +62,13 @@ const goBack = () => {
 }
 
 const beginQuiz = () => {
-    alert("C'est partie pour la Phase 2 ! (Bientôt)")
-    // TODO : Emettre l'événement de démarrage
+    socket.emit('start_game', roomCode.value)
 }
+
+// On écoute le signale de départ pour rediriger le créateur aussi
+socket.on('game_started', () => {
+    router.push(`/maker/game/${roomCode.value}`)
+})
 </script>
 
 <style>

@@ -18,8 +18,7 @@ import profileRoutes from "../routes/profileRoutes";
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http'; // Import création serveur pour le multijoueurs
 import { Server } from 'socket.io'; // Import des sockets
-import { create } from 'domain';
-import { Socket } from 'dgram';
+import { Category, Question, Setting } from '../models';
 
 const app: Application = express(); 
 const port = 3000; 
@@ -143,6 +142,51 @@ io.on("connection", (Socket) => {
             callback(({ success: true }));
         } else {
             callback({ success: false, message: "Code introuvable. Bruh." });
+        }
+    });
+
+    Socket.on("start_game", async (roomCode) => {
+        const game = activeGames[roomCode];
+        if (!game || game.hostId !== Socket.id) return;
+
+        try {
+            // On récupère le quiz complet avec questions et réglages
+            const quiz = await Category.findByPk(game.quizId, {
+                include: [{ 
+                    model: Question, 
+                    as: 'questions', 
+                    include: [{ model: Setting, as: 'settings' }] 
+                }]
+            });
+
+            if (!quiz || !quiz.questions) return;
+
+            // On initialise l'état de la partie
+            game.questions = quiz.questions;
+            game.currentQuestionIndex = 0;
+            game.status = 'playing';
+            game.scores = {}; // { socketId: points }
+        
+            // On initialise les scores des joueurs à 0
+            game.players.forEach((p: any) => { game.scores[p.id] = 0; });
+
+            // On prépare la première question (sans la réponse correcte !)
+            const firstQ = game.questions[0];
+            const questionData = {
+                text: firstQ.title,
+                answers: firstQ.possibleAnswers,
+                index: 0,
+                total: game.questions.length,
+                settings: firstQ.settings,
+                timeLimit: 15 // On pourras utiliser une valeur en base plus tard
+            };
+
+            // On envoie l'ordre de commencer à toute la Room
+            io.to(roomCode).emit("game_started", questionData);
+        
+            console.log(`Game ${roomCode} commencée !`);
+        } catch (error) {
+            console.error("Erreur lancement game:", error);
         }
     });
 

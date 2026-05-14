@@ -43,6 +43,10 @@ const joinGame = () => {
         }
     })
 }
+
+socket.on('game_started', () => {
+    router.push('/taker/game')
+})
 </script>
 
 <style scoped>
