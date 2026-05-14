@@ -164,35 +164,43 @@ io.on("connection", (Socket) => {
                 }]
             });
 
-            if (!quiz || !quiz.questions) return;
+            // Si le quiz est vide, on bloque pour éviter le crash
+            if (!quiz  || !quiz.questions || quiz.questions.length === 0) {
+                console.log("Quiz vide !");
+                return;
+            }
 
-            // On initialise l'état de la partie
+            // On prépare la partie
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
             game.status = 'playing';
-            game.scores = {}; // { socketId: points }
-        
-            // On initialise les scores des joueurs à 0
+            game.scores = {}; 
             game.players.forEach((p: any) => { game.scores[p.id] = 0; });
 
-            // On prépare la première question (sans la réponse correcte !)
-            const firstQ = game.questions[0];
-            const questionData = {
-                text: firstQ.title,
-                answers: firstQ.possibleAnswers,
-                index: 0,
-                total: game.questions.length,
-                settings: firstQ.settings,
-                timeLimit: 15 // On pourras utiliser une valeur en base plus tard
-            };
+            // On dit à tout le monde de changer de page (sans envoyer la donnée)
+            io.to(roomCode).emit("game_started");
+            console.log(`Game ${roomCode} commencée, tout le monde change de page !`);
 
-            // On envoie l'ordre de commencer à toute la Room
-            io.to(roomCode).emit("game_started", questionData);
-        
-            console.log(`Game ${roomCode} commencée !`);
         } catch (error) {
             console.error("Erreur lancement game:", error);
         }
+    });
+
+    Socket.on("get_current_question", (roomCode, callback) => {
+        const game = activeGames[roomCode];
+        if (!game || !game.questions) return;
+
+        const q = game.questions[game.currentQuestionIndex];
+
+        // On renvoie la donnée pile quand le frontend la réclame
+        callback({
+            text: q.title,
+            answers: q.possibleAnswers,
+            index: game.currentQuestionIndex,
+            total: game.questions.length,
+            settings: q.settings,
+            timeLimit: 15
+        });
     });
 
     Socket.on("disconnect", () => {

@@ -22,8 +22,8 @@ const router = createRouter({
     { path: '/maker/list', name: 'maker-list', component: MakerListView, meta: { requiresAuth: true } },
     { path: '/maker/edit/:id?', name: 'maker-edit', component: MakerEditView, meta: { requiresAuth: true } },
     { path: '/maker/lobby/:id', name: 'maker-lobby', component: MakerLobbyView, meta: { requiresAuth: true } },
-    { path: '/maker/game/:roomCode', component: MakerGameView },
-    { path: '/taker/game', component: TakerGameView }
+    { path: '/maker/game/:roomCode', name: 'maker-game', component: MakerGameView },
+    { path: '/taker/game/:roomCode',name: 'taker-game', component: TakerGameView }
   ]
 })
 

@@ -19,12 +19,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { socket } from '../services/socket'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const answers = ref([])
 const hasAnswered = ref(false)
+const roomCode = route.params.roomCode as string
 
 onMounted(() => {
-  socket.on('game_started', (data) => {
+  // Dès que le joueur arrive, il réclame les boutons de réponse
+  socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
     hasAnswered.value = false
   })
@@ -32,7 +36,12 @@ onMounted(() => {
 
 const submitAnswer = (answerText: string) => {
   hasAnswered.value = true
+  // Plus tard on enverra roomCode en plus de la réponse
   socket.emit('submit_answer', answerText)
+}
+
+const sendConfused = () => {
+    // TODO : Bientôt !
 }
 </script>
 

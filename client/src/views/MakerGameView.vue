@@ -26,14 +26,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { socket } from '../services/socket'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const currentQ = ref<any>({ text: '', answers: [], index: 0, total: 0 })
 const timer = ref(15)
 const confusedCount = ref(0)
+const roomCode = route.params.roomCode as string
 
 onMounted(() => {
-  // On reçoit les infos de la question
-  socket.on('game_started', (data) => {
+  // Dès que la page s'affiche, on réclame la question
+  socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
     startTimer()
   })

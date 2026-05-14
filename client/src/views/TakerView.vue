@@ -45,7 +45,7 @@ const joinGame = () => {
 }
 
 socket.on('game_started', () => {
-    router.push('/taker/game')
+    router.push(`/taker/game/${roomCode.value}`)
 })
 </script>
 
