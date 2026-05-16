@@ -1,6 +1,10 @@
 <template>
   <div class="game-wrapper">
     <div class="main-container">
+      <div v-if="isRickrolling" class="rickroll-overlay">
+        <img src="https://media.tenor.com/x8v1oNUOmg4AAAAd/rickroll-roll.gif" alt="Rickroll" />
+        <h1 style="color: white; font-size: 4rem;">NEVER GONNA GIVE YOU UP!</h1>
+      </div>
       
       <div v-if="screen === 'playing'" class="screen-layout">
         <div class="header">
@@ -101,6 +105,7 @@ const roomCode = route.params.roomCode as string
 const screen = ref('playing') // 'playing', 'results', 'leaderboard'
 const correctAnswer = ref('')
 const leaderboard = ref<any[]>([])
+const isRickrolling = ref(false)
 
 let timerInterval: any = null;
 
@@ -128,6 +133,19 @@ onMounted(() => {
       confusedCount.value = 0
       startTimer()
     })
+  })
+
+  // Mise à jour du compteur de confusion
+  socket.on('update_confused', (count: number) => {
+    confusedCount.value = count;
+    // * Plus tard : if (count > 3) palyDangerSound() 
+  })
+
+  // Activation du Rickroll
+  socket.on('activate_rickroll', () => {
+    isRickrolling.value = true;
+    // ON cache le rickroll après 5 secondes
+    setTimeout(() => { isRickrolling.value = false; }, 5000);
   })
 
   socket.on('game_over', () => {
@@ -237,4 +255,18 @@ const nextQuestion = () => {
   border-bottom: 1px dashed #ccc;
 }
 .player-row:last-child { border-bottom: none; }
+.rickroll-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Ça passe par dessus TOUT */
+}
+.rickroll-overlay img {
+  width: 80%;
+  max-width: 600px;
+}
 </style>

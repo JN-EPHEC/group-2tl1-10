@@ -172,6 +172,7 @@ io.on("connection", (Socket) => {
             // On prépare la partie
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
+            game.confusedCount = 0;
             game.status = 'playing';
             game.scores = {}; 
             game.players.forEach((p: any) => { game.scores[p.id] = 0; });
@@ -247,6 +248,8 @@ io.on("connection", (Socket) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
+        game.confusedCount = 0;
+
         // Sécurité : On empêche l'index d'aller plus loin que la fin du jeu
         if (game.currentQuestionIndex >= game.questions.length) return;
 
@@ -262,6 +265,30 @@ io.on("connection", (Socket) => {
             io.to(roomCode).emit("game_over");
             // * Optionnel : Nettoyer la partie pour libérer la mémoire du serveur
         }
+    });
+
+    // -- LES MECANIQUES ABSURDES  (Meilleur partie mdr :) )---
+
+    // Le compteur de confusion 
+    Socket.on('im_confused', (roomCode) => {
+        const game = activeGames[roomCode];
+        if (!game) return;
+
+        // On initialise ou incrémente le compteur
+        if (!game.confusedCount) game.confusedCount = 0;
+        game.confusedCount ++;
+
+        // On envoie la mise à jour UNIQUEMENT au créateur (hostId)
+        io.to(game.hostId).emit("update_confused", game.confusedCount);
+    });
+
+    // Le Secret Button (Rickroll)
+    Socket.on("trigger_secret", (roomCode) => {
+        const game = activeGames[roomCode];
+        if (!game) return;
+
+        // On prévient le créateur d'afficher le Rickroll
+        io.to(game.hostId).emit("activate_rickroll");
     });
 
     Socket.on("disconnect", () => {

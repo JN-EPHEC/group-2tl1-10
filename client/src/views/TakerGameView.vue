@@ -7,7 +7,19 @@
           {{ ans }}
         </button>
       </div>
-      <button class="confused-btn" @click="sendConfused">I'm confused</button>
+      <div class="chaos-buttons">
+        <button class="confused-btn" @click="sendConfused" :disabled="hasConfused">
+          {{ hasConfused ? "You are confused 😵‍💫" : "I'm confused" }}
+        </button>
+
+        <button v-if="currentSettings.secretButton" class="secret-btn" @click="triggerSecret">
+          DO NOT CLICK
+        </button>
+
+        <button v-if="currentSettings.rageQuit" class="rage-btn" @click="triggerRageQuit">
+          RAGE QUIT
+        </button>
+      </div>
     </div>
 
     <div v-else-if="screen === 'waiting'" class="waiting-msg">
@@ -38,11 +50,15 @@ const answers = ref([])
 const screen = ref('playing') // 'playing', 'waiting', 'results'
 const isCorrect = ref(false)
 const myAnswer = ref('') 
+const currentSettings = ref<any>({})
+const hasConfused = ref(false)
 
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
+    currentSettings.value = data.settings // On sauvergarde les réglages 
     screen.value = 'playing'
+    hasConfused.value = false
   })
 
   // Ecoute de la révélation des résultats
@@ -75,7 +91,26 @@ const submitAnswer = (answerText: string) => {
   socket.emit('submit_answer', { roomCode, answer: answerText })
 }
 
-const sendConfused = () => {}
+// Fonction Confused
+const sendConfused = () => {
+  if (hasConfused.value) return;
+  hasConfused.value = true;
+  socket.emit('im_confused', roomCode);
+}
+
+// Secret Button
+const triggerSecret = () => {
+  socket.emit('trigger_secret', roomCode);
+}
+
+// Le Rage Quit (Insta-loose)
+const triggerRageQuit = () => {
+  // On soumet une réponse fausse au serveur
+  socket.emit('submit_answer', { roomCode, answer: 'RAGE_QUIT_ABANDON' });
+  // On affiche directement le Megamind "No points?" au joueur
+  isCorrect.value = false;
+  screen.value = 'results';
+}
 </script>
 
 <style scoped>
