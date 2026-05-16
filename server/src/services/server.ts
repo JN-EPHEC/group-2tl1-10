@@ -191,6 +191,9 @@ io.on("connection", (Socket) => {
 
         const q = game.questions[game.currentQuestionIndex];
 
+        // Si la question n'existe plus, on arrête tout !
+        if (!q) return;
+
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
             text: q.title,
@@ -224,6 +227,7 @@ io.on("connection", (Socket) => {
         if (!game) return;
 
         const currentQ =  game.questions[game.currentQuestionIndex];
+        if (!currentQ) return; // Sécurité Anti-crash
 
         // On prépare le Leaderboard (trié du 1er au dernier)
         const leaderboard = game.players.map((p: any) => ({
@@ -243,6 +247,9 @@ io.on("connection", (Socket) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
+        // Sécurité : On empêche l'index d'aller plus loin que la fin du jeu
+        if (game.currentQuestionIndex >= game.questions.length) return;
+
         // On incrémente l'index de la question
         game.currentQuestionIndex++;
 
@@ -253,6 +260,7 @@ io.on("connection", (Socket) => {
         } else {
             // S'il n'y a plus de questions, c'est la fin du jeu !
             io.to(roomCode).emit("game_over");
+            // * Optionnel : Nettoyer la partie pour libérer la mémoire du serveur
         }
     });
 

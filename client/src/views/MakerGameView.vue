@@ -137,6 +137,9 @@ onMounted(() => {
 })
 
 const startTimer = () => {
+  // Retrait de l'ancien chrono
+  clearInterval(timerInterval)
+
   timerInterval = setInterval(() => {
     if (timer.value > 0) {
       timer.value--
@@ -144,7 +147,7 @@ const startTimer = () => {
       clearInterval(timerInterval)
       showAnswer()
     }
-  })
+  }, 1000)
 }
 
 const showAnswer = () => {
