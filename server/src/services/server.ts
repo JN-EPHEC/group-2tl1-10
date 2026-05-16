@@ -6,7 +6,6 @@ import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importa
 import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
 import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
 import categoryRoutes from "../routes/category.routes"; // Importation de la route pour les categories 
-import sequelize from "../config/database";
 import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
 import swaggerUi from "swagger-ui-express";
@@ -201,6 +200,60 @@ io.on("connection", (Socket) => {
             settings: q.settings,
             timeLimit: 15
         });
+    });
+
+    // Le joueur soumet une réponse
+    Socket.on("submit_answer", (data) => {
+        const { roomCode, answer } = data;
+        const game = activeGames[roomCode];
+        if (!game) return;
+
+        const currentQ = game.questions[game.currentQuestionIndex];
+        const isCorrect = answer === currentQ.correctAnswer;
+
+        // Si c'est juste, on donne 100 points (multipliés par le par le réglage du créateur)
+        if (isCorrect) {
+            const multiplier = currentQ.settings?.scoreMultiplier || 1.0;
+            game.scores[Socket.id] += (100 * multiplier);
+        }
+    });
+
+    // Le créateur révèle la réponse
+    Socket.on("reveal_answer", (roomCode) => {
+        const game = activeGames[roomCode];
+        if (!game) return;
+
+        const currentQ =  game.questions[game.currentQuestionIndex];
+
+        // On prépare le Leaderboard (trié du 1er au dernier)
+        const leaderboard = game.players.map((p: any) => ({
+            username: p.username,
+            score: game.scores[p.id]
+        })).sort((a: any, b: any) => b.score - a.score);
+
+        // On diffuse la bonne réponse et le classement à tout le monde
+        io.to(roomCode).emit("results_revealed", {
+            correctAnswer: currentQ.correctAnswer,
+            leaderboard: leaderboard
+        });
+    });
+
+    // Passe à la question suivante
+    Socket.on("next_question", (roomCode) => {
+        const game = activeGames[roomCode];
+        if (!game) return;
+
+        // On incrémente l'index de la question
+        game.currentQuestionIndex++;
+
+        // S'il rete des questions 
+        if (game.currentQuestionIndex < game.questions.length) {
+            // On prévient tout le monde que la suite est prête !
+            io.to(roomCode).emit("next_question_ready");
+        } else {
+            // S'il n'y a plus de questions, c'est la fin du jeu !
+            io.to(roomCode).emit("game_over");
+        }
     });
 
     Socket.on("disconnect", () => {
