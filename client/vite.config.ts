@@ -10,9 +10,14 @@ export default defineConfig({
     },
   },
   server: {
+    host: true, 
+    allowedHosts: [
+      'www.l1-10.ephec-ti.be',
+      'l1-10.ephec-ti.be'
+    ],
     proxy: {
       '/api': {
-        target: "http://localhost:3000", 
+        target: "http://backend:3000", 
         changeOrigin: true
       }
     }
