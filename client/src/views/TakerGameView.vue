@@ -12,11 +12,11 @@
           {{ hasConfused ? "You are confused 😵‍💫" : "I'm confused" }}
         </button>
 
-        <button v-if="currentSettings.secretButton" class="secret-btn" @click="triggerSecret">
+        <button v-if="currentSettings?.secretButton" class="secret-btn" @click="triggerSecret">
           DO NOT CLICK
         </button>
 
-        <button v-if="currentSettings.rageQuit" class="rage-btn" @click="triggerRageQuit">
+        <button v-if="currentSettings?.rageQuit" class="rage-btn" @click="triggerRageQuit">
           RAGE QUIT
         </button>
       </div>
@@ -56,7 +56,7 @@ const hasConfused = ref(false)
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
-    currentSettings.value = data.settings // On sauvergarde les réglages 
+    currentSettings.value = data.settings || {} // On sauvergarde les réglages 
     screen.value = 'playing'
     hasConfused.value = false
   })
@@ -71,8 +71,10 @@ onMounted(() => {
   socket.on('next_question_ready', () => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
+      currentSettings.value = data.settings || {}
       screen.value = 'playing'
       hasAnswered.value = false // On autorise le joueur à re-cliquer
+      hasConfused.value = false
       myAnswer.value = ''
     })
   })
