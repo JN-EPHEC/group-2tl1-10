@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+# Le script se déclenche à chaque push sur la branche main
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Connexion SSH et Déploiement
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          script: |
+            # 1. On va dans le dossier du projet sur le VPS 
+            cd /home/justin/github/group-2tl1-10
+
+            # 2. On récupère le nouveau code depuis GitHub
+            git pull origin main
+            
+            # 3. On coupe les anciens conteneurs, on reconstruit et on relance
+            docker compose down
+            docker compose up --build -d

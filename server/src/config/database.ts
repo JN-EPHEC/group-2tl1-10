@@ -7,32 +7,23 @@ class Database {
 
   public static getInstance(): Sequelize {
     if (!Database.instance) {
-      
-      // MODE PRODUCTION (VPS / Supabase) avec SSL
-      if (process.env.DATABASE_URL) {
-        Database.instance = new Sequelize(process.env.DATABASE_URL, {
-            dialect: "postgres",
-            dialectOptions: {
-              ssl: { require: true, rejectUnauthorized: false },
-            },
-            logging: false,
-        });
-      } 
-      // MODE LOCALHOST (Postgres la machine) sans SSL
-      else {
-        // On demande à Sequelize d'aller lire directement dans le fichier .env
-        Database.instance = new Sequelize({
-            username: process.env.DB_USER as string,
-            password: process.env.DB_PASSWORD as string,
-            database: process.env.DB_NAME as string,
-            host: process.env.DB_HOST as string,
-            port: Number(process.env.DB_PORT || 5432),
-            dialect: "postgres",
-            logging: false, // Peut être mis à "console.log pour voir les requêtes SQL"
-        });
+      const connectionString = process.env.DATABASE_URL;
+
+      if (!connectionString) {
+        throw new Error("DANGER : La variable DATABASE_URL est manquante dans le .env!");
       }
+
+      Database.instance = new Sequelize(connectionString, {
+        dialect: 'postgres',
+        logging: false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        }
+      });
     }
-    
     return Database.instance;
   }
 }
