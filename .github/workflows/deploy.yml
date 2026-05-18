@@ -17,6 +17,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_PRIVATE_KEY }}
+          port: 54321
           script: |
             # 1. On va dans le dossier du projet sur le VPS 
             cd /home/justin/github/group-2tl1-10
