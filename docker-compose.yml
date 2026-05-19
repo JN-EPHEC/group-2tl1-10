@@ -3,8 +3,6 @@ version: '3.8'
 services:
   backend:
     build: ./server
-    ports:
-      - "3000:3000"
     env_file:
       - ./server/.env
     volumes:
@@ -13,10 +11,26 @@ services:
 
   frontend:
     build: ./client
-    ports:
-      - "5173:5173"
     volumes:
       - ./client:/app
       - /app/node_modules 
     depends_on:
       - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  caddy_data:
+  caddy_config:
