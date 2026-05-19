@@ -66,12 +66,21 @@
         <div class="settings-box">
           <!-- Toggles WTF -->
           <div class="setting-row">
+            <div class="toggle-switch"
+                 :class="{ 'is-correct': activeQ.settings.enableSounds !== false }"
+                 @click="activeQ.settings.enableSounds = activeQ.settings.enableSounds === false ? true : false">
+              <div class="toggle-knob"></div>
+            </div>
+            <span>enable absurd sound 🔊</span>
+          </div>
+          
+          <div class="setting-row">
             <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.rageQuit }" @click="activeQ.settings.rageQuit = !activeQ.settings.rageQuit">
               <div class="toggle-knob"></div>
             </div>
             <span>enable rage quit</span>
           </div>
-          
+
           <div class="setting-row">
             <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.secretButton }" @click="activeQ.settings.secretButton = !activeQ.settings.secretButton">
               <div class="toggle-knob"></div>

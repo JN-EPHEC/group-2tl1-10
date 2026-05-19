@@ -65,6 +65,11 @@ onMounted(() => {
   socket.on('results_revealed', (data: any) => {
     isCorrect.value = (myAnswer.value === data.correctAnswer)
     screen.value = 'results'
+    if (isCorrect.value) {
+      playSound('mlg-horns-sound-effect')
+    } else {
+      playSound('fahhhhhhhhhhhhhh')
+    }
   })
 
   // Quand le créateur passe à la question d'après
@@ -86,11 +91,24 @@ onMounted(() => {
   })
 })
 
+// Fonction audio 
+const playSound = (soundName: string) => {
+  // Vérification de si le créateur à désactivé les sons (on l'autorise par défaut)
+  if (currentSettings.value?.enableSounds === false) return;
+
+  // On lance le son
+  const audio = new Audio(`/sounds/${soundName}.mp3`);
+  audio.play().catch(error => {
+    console.warn("Le navigateur à bloqué l'audio :", error);
+  });
+}
+
 const submitAnswer = (answerText: string) => {
   myAnswer.value = answerText
   screen.value = 'waiting'
   // On renvoie le code de la room ET la réponse !
   socket.emit('submit_answer', { roomCode, answer: answerText })
+  playSound('ive-got-this')
 }
 
 // Fonction Confused

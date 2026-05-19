@@ -77,7 +77,7 @@ async function startApp() {
         console.log("Synchronisation terminé");
 
         // Changement pour httpServer.listen() pour lancer le serveur http
-        httpServer.listen(PORT, () => {
+        httpServer.listen(PORT, '0.0.0.0', () => {
             console.log(`Serveur prêt sur le port ${PORT}`);
         });
     } catch (error) {
