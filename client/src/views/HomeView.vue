@@ -78,6 +78,15 @@ onMounted(() => {
   currentTitle.value = absurdTitles[randomIndex]
 })
 
+// Fonctions audio 
+const playSound = (soundName: string) => {
+  // On lance le son
+  const audio = new Audio(`/sounds/${soundName}.mp3`);
+  audio.play().catch(error => {
+    console.warn("Le navigateur à bloqué l'audio :", error);
+  });
+}
+
 // --- VARIABLES D'ÉTAT ---
 const displayName = ref('')
 
@@ -89,6 +98,7 @@ const goToLogin = () => {
 // Déconnecter l'utilisateur
 const handleLogout = () => {
   authStore.logout()
+  playSound('tuco-get-out')
 }
 </script>
 

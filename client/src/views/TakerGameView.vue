@@ -130,6 +130,7 @@ const triggerRageQuit = () => {
   // On affiche directement le Megamind "No points?" au joueur
   isCorrect.value = false;
   screen.value = 'results';
+  playSound('chicken-on-tree-screaming')
 }
 </script>
 

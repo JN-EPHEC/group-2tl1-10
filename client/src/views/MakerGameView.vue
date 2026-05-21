@@ -109,6 +109,17 @@ const isRickrolling = ref(false)
 
 let timerInterval: any = null;
 
+const playSound = (soundName: string) => {
+  // Vérification de si le créateur à désactivé les sons (on l'autorise par défaut)
+  // if (currentSettings.value?.enableSounds === false) return;
+
+  // On lance le son
+  const audio = new Audio(`/sounds/${soundName}.mp3`);
+  audio.play().catch(error => {
+    console.warn("Le navigateur à bloqué l'audio :", error);
+  });
+}
+
 onMounted(() => {
   // Dès que la page s'affiche, on réclame la question
   socket.emit('get_current_question', roomCode, (data: any) => {
@@ -138,7 +149,9 @@ onMounted(() => {
   // Mise à jour du compteur de confusion
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-    // * Plus tard : if (count > 3) palyDangerSound() 
+    if (count >= 0) {
+      playSound('ia-ia-ahh-yeye-yeye-lovely-sad')
+    }
   })
 
   // Activation du Rickroll
@@ -146,6 +159,7 @@ onMounted(() => {
     isRickrolling.value = true;
     // ON cache le rickroll après 5 secondes
     setTimeout(() => { isRickrolling.value = false; }, 5000);
+    playSound('rickroll-good')
   })
 
   socket.on('game_over', () => {
