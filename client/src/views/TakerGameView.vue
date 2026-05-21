@@ -31,10 +31,10 @@
       <h1 v-if="isCorrect">Points?</h1>
       <h1 v-else>No points?</h1>
       
-      <img v-if="isCorrect" src="https://i.imgflip.com/6c986v.jpg" alt="Megamind points" class="meme-img"/>
-      <img v-else src="https://i.kym-cdn.com/entries/icons/original/000/039/393/cover2.jpg" alt="Megamind no points" class="meme-img"/>
+      <img v-if="isCorrect" src="../../public/pictures/Points.png" alt="Megamind points" class="meme-img"/>
+      <img v-else src="../../public/pictures/No_points.png" alt="Megamind no points" class="meme-img"/>
     </div>
-  </div>
+  </div>np
 </template>
 
 <script setup lang="ts">
