@@ -63,7 +63,12 @@ onMounted(() => {
 
   // Ecoute de la révélation des résultats
   socket.on('results_revealed', (data: any) => {
-    isCorrect.value = (myAnswer.value === data.correctAnswer)
+    if (data.correctAnswers.length === 0) {
+      // Si aucune bonne réponse, on gagne si on est resté sage sans cliquer
+      isCorrect.value = (myAnswer.value === '')
+    } else {
+      isCorrect.value = data.correctAnswers.includes(myAnswer.value)
+    }
     screen.value = 'results'
     if (isCorrect.value) {
       playSound('mlg-horns-sound-effect')

@@ -37,7 +37,7 @@
         <div class="answers-grid">
           <div v-for="(ans, i) in currentQ.answers" :key="i" 
                class="answer-box" 
-               :class="{ 'correct-answer': ans === correctAnswer }">
+               :class="{ 'correct-answer': correctAnswer.includes(ans) }">
             {{ ans }}
           </div>
         </div>
@@ -103,7 +103,7 @@ const timer = ref(15)
 const confusedCount = ref(0)
 const roomCode = route.params.roomCode as string
 const screen = ref('playing') // 'playing', 'results', 'leaderboard'
-const correctAnswer = ref('')
+const correctAnswer = ref<string[]>([])
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
 
