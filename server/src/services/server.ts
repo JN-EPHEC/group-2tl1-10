@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { type Application, type Request, type Response} from 'express'; 
+import express, { response, type Application, type Request, type Response} from 'express'; 
 import userRoutes from "../routes/userRoutes"; // Importation de la route user
 import adminRoutes from "../routes/adminRoutes"; // Importation de la route admin
 import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
@@ -20,6 +20,8 @@ import { Server } from 'socket.io'; // Import des sockets
 import Category from '../models/category.model';
 import Question from '../models/question.model';
 import Setting from '../models/setting.model';
+import GameSession from '../models/gameSession.model';
+import PlayerAnswer from '../models/playerAnswer.model';
 
 const app: Application = express(); 
 const port = 3000; 
@@ -174,8 +176,25 @@ io.on("connection", (Socket) => {
             game.currentQuestionIndex = 0;
             game.confusedCount = 0;
             game.status = 'playing';
+
             game.scores = {}; 
-            game.players.forEach((p: any) => { game.scores[p.id] = 0; });
+            game.responses = {};
+            game.sessionIds = {};
+            game.questionStartTime = Date.now();
+
+            for (const p of game.players) {
+                game.scores[p.id] = 0;
+                try {
+                    const session = await GameSession.create({
+                        status: "IN_PROGRESS",
+                        total: 0,
+                        // userID ??? (A VOIR ET COMPLETER)
+                    });
+                    game.sessionIds[p.id] = session.id;
+                } catch(err) {
+                    console.error("Erreur création session BDD", err);
+                }
+            }
 
             // On dit à tout le monde de changer de page (sans envoyer la donnée)
             io.to(roomCode).emit("game_started");
@@ -212,39 +231,90 @@ io.on("connection", (Socket) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
-        const currentQ = game.questions[game.currentQuestionIndex];
-        const isCorrect = answer === currentQ.correctAnswer;
-
-        // Si c'est juste, on donne 100 points (multipliés par le par le réglage du créateur)
-        if (isCorrect) {
-            const multiplier = currentQ.settings?.scoreMultiplier || 1.0;
-            game.scores[Socket.id] += (100 * multiplier);
+        if (!game.responses[game.currentQuestionIndex]) {
+            game.responses[game.currentQuestionIndex] = {};
         }
+
+        // On calcule le temps passé
+        const timeSpent = Math.floor((Date.now() - game.questionStartTime) / 1000);
+
+        game.responses[game.currentQuestionIndex][Socket.id] = {
+            providedAnswer: answer,
+            timeSpent: timeSpent
+        };
     });
 
     // Le créateur révèle la réponse
-    Socket.on("reveal_answer", (roomCode) => {
+    Socket.on("reveal_answer", async (roomCode) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
-        const currentQ =  game.questions[game.currentQuestionIndex];
-        if (!currentQ) return; // Sécurité Anti-crash
+        const currentQ = game.questions[game.currentQuestionIndex];
 
-        // On prépare le Leaderboard (trié du 1er au dernier)
-        const leaderboard = game.players.map((p: any) => ({
+        // On transforme la chaîne en tableau
+        let correctAnswers: string[] = [];
+        if (Array.isArray(currentQ.correctAnswers)) {
+            correctAnswers = currentQ.correctAnswer;
+        } else if (typeof currentQ.correctAnswer === 'string') {
+            try { correctAnswers = JSON.parse(currentQ.correctAnswer); }
+            catch { correctAnswers = currentQ.correctAnswer ? [currentQ.correctAnswer] : []; }
+        }
+
+        const questionReponses = game.responses[game.currentQuestionIndex] || {};
+        const dbAnswersToInsert: any[] = [];
+
+        // On vérifie les réponses de TOUS les joueurs
+        game.players.forEach((p: any) => {
+            const responseObj = questionReponses[p.id] || {};
+            const playerAnswer = responseObj.providedAnswer;
+            let isCorrect = false;
+
+            // Si aucune réponse : on gagne si on a rien répondu
+            if (correctAnswers.length === 0) {
+                isCorrect = (playerAnswer === undefined || playerAnswer === '');
+            } else {
+                isCorrect = correctAnswers.includes(playerAnswer);
+            }
+
+            if (isCorrect) {
+                const multiplier = currentQ.settings?.scoreMultiplier || 1.0;
+                game.scores[p.id] += (100 * multiplier);
+            }
+
+            // Préparation de l'insertion PlayerAnswer
+            if (game.sessionIds[p.id]) {
+                dbAnswersToInsert.push({
+                    providedAnswer: playerAnswer || null,
+                    isCorrect: isCorrect,
+                    timeSpent: responseObj.timeSpent || null,
+                    gameSessionId: game.sessionIds[p.id],
+                    questionId: currentQ.id
+                });
+            }
+        });
+
+        // Insertion en masse pour ne pas surcharger la base
+        if (dbAnswersToInsert.length > 0) {
+            try {
+                await PlayerAnswer.bulkCreate(dbAnswersToInsert);
+            } catch(err) {
+                console.error("Erreur insertion PlayerAnswers :", err);
+            }
+        }
+
+        const leaderboard = game.players.map((p:any) => ({
             username: p.username,
             score: game.scores[p.id]
-        })).sort((a: any, b: any) => b.score - a.score);
+        })).sort((a:any, b:any) => b.score - a.score);
 
-        // On diffuse la bonne réponse et le classement à tout le monde
         io.to(roomCode).emit("results_revealed", {
-            correctAnswer: currentQ.correctAnswer,
+            correctAnswers: correctAnswers,
             leaderboard: leaderboard
         });
     });
 
     // Passe à la question suivante
-    Socket.on("next_question", (roomCode) => {
+    Socket.on("next_question", async (roomCode) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
@@ -258,12 +328,27 @@ io.on("connection", (Socket) => {
 
         // S'il rete des questions 
         if (game.currentQuestionIndex < game.questions.length) {
+            game.questionStartTime = Date.now(); // Reset du chrono
             // On prévient tout le monde que la suite est prête !
             io.to(roomCode).emit("next_question_ready");
         } else {
             // S'il n'y a plus de questions, c'est la fin du jeu !
             io.to(roomCode).emit("game_over");
             // * Optionnel : Nettoyer la partie pour libérer la mémoire du serveur
+
+            // C'est la fin, on met à jour les scores finaux
+            for (const p of game.players) {
+                if (game.sessionIds[p.id]) {
+                    try {
+                        await GameSession.update(
+                            { totalScore: game.scores[p.id] || 0, status: 'FINISHED' },
+                            { where: { id: game.sessionIds[p.id] } }
+                        );
+                    } catch (err) {
+                        console.error("Erreur mise à jour finale GameSession :", err);
+                    }
+                }
+            }
         }
     });
 
@@ -293,7 +378,7 @@ io.on("connection", (Socket) => {
 
     Socket.on("disconnect", () => {
         console.log(`Déconnexion : ${Socket.id}`);
-        // TODO plus tard : Gérer la déconnexion d'un joueur ou du créateur s
+        // TODO plus tard : Gérer la déconnexion d'un joueur ou du créateur
     })
 });
 
