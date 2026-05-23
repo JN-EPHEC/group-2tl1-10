@@ -188,7 +188,8 @@ io.on("connection", (Socket) => {
                     const session = await GameSession.create({
                         status: "IN_PROGRESS",
                         total: 0,
-                        // userID ??? (A VOIR ET COMPLETER)
+                        playerName: p.username,
+                        userId: null
                     });
                     game.sessionIds[p.id] = session.id;
                 } catch(err) {
