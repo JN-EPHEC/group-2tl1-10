@@ -129,7 +129,7 @@ onMounted(() => {
 
   // Révélations des résultats
   socket.on('results_revealed', (data: any) => {
-    correctAnswer.value = data.correctAnswer
+    correctAnswer.value = data.correctAnswers
     leaderboard.value = data.leaderboard
     screen.value = 'results' // Affichage de la bonne réponse
   })
@@ -160,6 +160,10 @@ onMounted(() => {
     // ON cache le rickroll après 5 secondes
     setTimeout(() => { isRickrolling.value = false; }, 5000);
     playSound('rickroll-good')
+  })
+
+  socket.on("all_players_answered", () => {
+    showAnswer();
   })
 
   socket.on('game_over', () => {

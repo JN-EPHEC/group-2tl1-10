@@ -243,6 +243,14 @@ io.on("connection", (Socket) => {
             providedAnswer: answer,
             timeSpent: timeSpent
         };
+
+        // On compte combien de joueurs ont répondu à cette question
+        const responseCount = Object.keys(game.responses[game.currentQuestionIndex]).length;
+
+        // Si tout le monde a répondu, on prévient l'écran du Créateur
+        if (responseCount >= game.players.length) {
+            io.to(game.hostId).emit("all_players_answered");
+        }
     });
 
     // Le créateur révèle la réponse
