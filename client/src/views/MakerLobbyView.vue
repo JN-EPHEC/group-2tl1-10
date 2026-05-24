@@ -4,7 +4,7 @@
             <h1 class="main-title">Waiting for victims</h1>
             <h2 class="room-code">Room code: <span>{{ roomCode || '...' }}</span></h2>
             <div class="qr-placeholder">
-                <qrcode-vue :value="joinUrl" :size="200" level="M" />
+                <qrcode-vue :value="joinUrl" :size="175" level="M" />
             </div>
 
             <div class="players-box">
@@ -80,14 +80,14 @@ socket.on('game_started', () => {
 </script>
 
 <style>
-.lobby-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; font-family: sans-serif; }
+.lobby-wrapper { display: flex; position: relative; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; font-family: sans-serif; }
 .main-container { border: 2px solid black; padding: 2rem 3rem; width: 800px; background-color: white; display: flex; flex-direction: column; align-items: center; position: relative; }
 
 .main-title { font-size: 3rem; margin-bottom: 0.5rem; }
 .room-code { font-size: 2rem; font-weight: normal; margin-bottom: 2rem; }
 .room-code span { font-weight: bold; letter-spacing: 2px; }
 
-.qr-placeholder { position: absolute; top: 2rem; right: 2rem; border: 2px solid black; padding: 1rem; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; }
+.qr-placeholder { position: absolute; top: 5px; right: 27.5px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #800;}
 
 .players-box { border: 2px solid black; width: 100%; min-height: 200px; padding: 1rem; margin-bottom: 2rem; }
 .players-box h3 { text-align: center; text-decoration: underline; font-size: 1.5rem; margin-bottom: 1.5rem; }
