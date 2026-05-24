@@ -124,6 +124,7 @@ onMounted(() => {
   // Dès que la page s'affiche, on réclame la question
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
+    timer.value = data.timeLimit || 15
     startTimer()
   })
 
@@ -140,7 +141,7 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       currentQ.value = data
       screen.value = 'playing'
-      timer.value = 15
+      timer.value = data.timeLimit || 15
       confusedCount.value = 0
       startTimer()
     })
