@@ -76,6 +76,13 @@ onMounted(() => {
   // On choisit un titre au hasard au chargement de la page
   const randomIndex = Math.floor(Math.random() * absurdTitles.length)
   currentTitle.value = absurdTitles[randomIndex]
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeFromUrl = urlParams.get('code')
+
+  if (codeFromUrl) {
+    roomCode.value = codeFromUrl; // Remplit l'input automatiquement
+  }
 })
 
 // Fonctions audio 

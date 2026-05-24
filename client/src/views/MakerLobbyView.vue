@@ -3,7 +3,9 @@
         <div class="main-container">
             <h1 class="main-title">Waiting for victims</h1>
             <h2 class="room-code">Room code: <span>{{ roomCode || '...' }}</span></h2>
-            <div class="qr-placeholder">qr code maybe</div>
+            <div class="qr-placeholder">
+                <qrcode-vue :value="joinUrl" :size="200" level="M" />
+            </div>
 
             <div class="players-box">
                 <h3>Players:</h3>
@@ -29,6 +31,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { socket } from '../services/socket';
+import { computed } from 'vue';
+import QrcodeVue from 'qrcode.vue'; 
 
 const route = useRoute()
 const router = useRouter()
@@ -64,6 +68,10 @@ const goBack = () => {
 const beginQuiz = () => {
     socket.emit('start_game', roomCode.value)
 }
+
+const joinUrl = computed(() => {
+    return `${window.location.origin}/?code=${roomCode.value}`;
+})
 
 // On écoute le signale de départ pour rediriger le créateur aussi
 socket.on('game_started', () => {
