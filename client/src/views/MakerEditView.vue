@@ -94,6 +94,14 @@
             <span>score multiplier</span>
           </div>
 
+          <div class="setting-row">
+            <input type="number"
+                   v-model.number="activeQ.settings.timeLimit"
+                   class="dashed-input tiny-input"
+                   placeholder="15" />
+            <span>time limit (seconds)</span>
+          </div>
+
           <div class="setting-row" v-for="sound in ['win', 'firstWin', 'lose', 'firstLose']" :key="sound">
             <input type="text" v-model="activeQ.settings[`${sound}Sound`]" class="dashed-input small-input" placeholder="sound.mp3" />
             <span>{{ sound }} sound</span>

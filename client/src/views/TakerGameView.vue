@@ -34,7 +34,7 @@
       <img v-if="isCorrect" src="../../public/pictures/Points.png" alt="Megamind points" class="meme-img"/>
       <img v-else src="../../public/pictures/No_points.png" alt="Megamind no points" class="meme-img"/>
     </div>
-  </div>np
+  </div>
 </template>
 
 <script setup lang="ts">

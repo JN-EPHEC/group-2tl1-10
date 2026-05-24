@@ -215,6 +215,9 @@ io.on("connection", (Socket) => {
         // Si la question n'existe plus, on arrête tout !
         if (!q) return;
 
+        // On récupère la vlauer personalisée, sinon 15 secondes par défaut
+        const chosenTimeLimit = q.settings?.timeLimit || 15;
+
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
             text: q.title,
@@ -222,7 +225,7 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: 15
+            timeLimit: chosenTimeLimit
         });
     });
 

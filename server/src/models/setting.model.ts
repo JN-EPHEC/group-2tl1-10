@@ -17,6 +17,11 @@ const Setting = sequelize.define('Setting', {
         type: DataTypes.INTEGER,
         references: { model: Question, key: 'id' },
         onDelete: 'CASCADE'
+    },
+    timeLimit: {
+        type: DataTypes.INTEGER,
+        defaultValue: 15,
+        allowNull: false
     }
 }, { tableName: 'Setting', timestamps: true });
 
