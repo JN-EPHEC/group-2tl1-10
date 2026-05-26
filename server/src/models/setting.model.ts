@@ -22,6 +22,11 @@ const Setting = sequelize.define('Setting', {
         type: DataTypes.INTEGER,
         defaultValue: 15,
         allowNull: false
+    },
+    jumpingButtons: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
     }
 }, { tableName: 'Setting', timestamps: true });
 
