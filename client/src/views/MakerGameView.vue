@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -106,6 +106,9 @@ const screen = ref('playing') // 'playing', 'results', 'leaderboard'
 const correctAnswer = ref<string[]>([])
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
+const backgroundMusic = new Audio('/sounds/ambiance-absurde.mp3') // TODO: Mettre une vrai musique
+backgroundMusic.loop = true
+backgroundMusic.volume = 0.3
 
 let timerInterval: any = null;
 
@@ -168,9 +171,19 @@ onMounted(() => {
   })
 
   socket.on('game_over', () => {
+    backgroundMusic.pause()
     alert("C'est la fin du Quiz ! Admirez le classement final.")
     // On laisse le créateur sur l'écran 'leaderboard' pour qu'il voie le podium 
   })
+
+  backgroundMusic.play().catch(error => {
+    console.warn("Le navigateur a bloqué l'autoplay de la musique :", error)
+  })
+})
+
+onUnmounted(() => {
+  backgroundMusic.pause();
+  backgroundMusic.currentTime = 0; // Remise de la piste à zéro
 })
 
 const startTimer = () => {
