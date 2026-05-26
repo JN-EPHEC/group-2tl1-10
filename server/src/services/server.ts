@@ -22,6 +22,7 @@ import Question from '../models/question.model';
 import Setting from '../models/setting.model';
 import GameSession from '../models/gameSession.model';
 import PlayerAnswer from '../models/playerAnswer.model';
+import { READCOMMITTED } from 'sequelize/types/table-hints';
 
 const app: Application = express(); 
 const port = 3000; 
@@ -346,7 +347,6 @@ io.on("connection", (Socket) => {
         } else {
             // S'il n'y a plus de questions, c'est la fin du jeu !
             io.to(roomCode).emit("game_over");
-            // * Optionnel : Nettoyer la partie pour libérer la mémoire du serveur
 
             // C'est la fin, on met à jour les scores finaux
             for (const p of game.players) {
@@ -361,6 +361,10 @@ io.on("connection", (Socket) => {
                     }
                 }
             }
+
+            // NETTOYAGE : On supprime la partie mémoire vive du serveur
+            console.log(`Fermeture de la room ${roomCode} et nettoyage de la mémoire.`);
+            delete activeGames[roomCode];
         }
     });
 
@@ -389,8 +393,40 @@ io.on("connection", (Socket) => {
     });
 
     Socket.on("disconnect", () => {
-        console.log(`Déconnexion : ${Socket.id}`);
-        // TODO plus tard : Gérer la déconnexion d'un joueur ou du créateur
+        console.log(`Déconnexion d'un utilisateur : ${Socket.id}`);
+        
+        // On cherche dans toutes les parties si le socket appartient à quelqu'un
+        for (const roomCode in activeGames) {
+            const game = activeGames[roomCode];
+
+            // CAS 1 : Si le Créateur qui s'est déconnecté (Rage quit, perte de co...)
+            if (game.hostId === Socket.id) {
+                console.log(`Le créateur de la room ${roomCode} est parti. Destruction de la salle`);
+                io.to(roomCode).emit("host_disconnected"); // On annonce la déconnexion
+                delete activeGames[roomCode];
+                break; 
+            }
+            // CAS 2 : C'est un joueur qui s'est déconnecté
+            else {
+                const playerIndex = game.players.findIndex((p: any) => p.id === Socket.id);
+
+                if (playerIndex !== -1) {
+                    console.log(`Un joueur a quitté la room ${roomCode}`);
+                    // On le supprime du tableau des joueurs
+                    game.players.splice(playerIndex, 1)
+
+                    // SECRUITE AUTO-REVELATION :
+                    // On vérifie si tout le monde à répondu
+                    const currentResponses = game.responses[game.currentQuestionIndex] || {};
+                    const responseCount = Object.keys(currentResponses).length;
+
+                    // S'il rest des joueurs et qu'ils ont tous répondu, on déclenche la révélation
+                    if (game.players.length > 0 && responseCount >= game.players.length) {
+                        io.to(game.hostId).emit("all_players_answered");
+                    }
+                }
+            }
+        }
     })
 });
 
