@@ -88,6 +88,15 @@
             <span>enable secret button</span>
           </div>
 
+          <div class="setting-row">
+            <div class="toggle-switch"
+                 :class="{ 'is-correct': activeQ.settings.jumpingButtons }"
+                 @click="activeQ.settings.jumpingButtons = ! activeQ.settings.jumpingButtons">
+                <div class="toggle-knob"></div>
+              </div>
+              <span>enable jumping buttons</span>
+          </div>
+
           <!-- Multiplicateur et Sons -->
           <div class="setting-row">
             <input type="number" v-model="activeQ.settings.scoreMultiplier" class="dashed-input tiny-input" />

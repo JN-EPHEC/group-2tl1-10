@@ -2,8 +2,12 @@
   <div class="taker-game">
     <div v-if="screen === 'playing'" class="answers-layout">
       <div class="grid-2x2">
-        <button v-for="(ans, i) in answers" :key="i" 
-                class="answer-btn" @click="submitAnswer(ans)">
+        <button 
+          v-for="(ans, index) in answers"
+          :key="index"
+          class="answer-btn"
+          @click="submitAnswer(ans)"
+          @mouseenter="hoverButton(index)"  :style="buttonStyles[index]"    >
           {{ ans }}
         </button>
       </div>
@@ -53,6 +57,26 @@ const myAnswer = ref('')
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
 
+// Pour stocker le style dynamique de chaque bouton
+const buttonStyles = ref<Record<number, any>>({})
+
+// La fonction qui fait sauter le bouton
+const hoverButton = (index: number) => {
+  // On ne bouge que si le créateur a activé l'option pour cette question
+  if (currentSettings.value?.jumpingButtons) {
+    // Déplacement aléatoire entre -150px et +150px sur X et Y
+    const randomX = Math.floor(Math.random() * 300) - 150
+    const randomY = Math.floor(Math.random() * 300) - 150
+
+    // On applique le style uniquement au bouton survolé
+    buttonStyles.value[index] = {
+      transform: `translate(${randomX}px, ${randomY}px)`,
+      transition: 'transform 0.15s ease-out', // Petit effet de glissement
+      zIndex: 10 // Pour s'assurer qu'il passe au-dessus des autres boutons
+    }
+  }
+}
+
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
@@ -83,6 +107,7 @@ onMounted(() => {
       answers.value = data.answers
       currentSettings.value = data.settings || {}
       screen.value = 'playing'
+      buttonStyles.value = {}
       hasAnswered.value = false // On autorise le joueur à re-cliquer
       hasConfused.value = false
       myAnswer.value = ''

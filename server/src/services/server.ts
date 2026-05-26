@@ -22,7 +22,6 @@ import Question from '../models/question.model';
 import Setting from '../models/setting.model';
 import GameSession from '../models/gameSession.model';
 import PlayerAnswer from '../models/playerAnswer.model';
-import { READCOMMITTED } from 'sequelize/types/table-hints';
 
 const app: Application = express(); 
 const port = 3000; 
