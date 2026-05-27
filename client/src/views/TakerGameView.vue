@@ -1,40 +1,80 @@
 <template>
-  <div class="taker-game">
-    <div v-if="screen === 'playing'" class="answers-layout">
-      <div class="grid-2x2">
-        <button v-for="(ans, i) in answers" :key="i" 
-                class="answer-btn" @click="submitAnswer(ans)">
+  <div class="min-h-screen flex items-center justify-center font-sans">
+    
+    <div v-if="screen === 'playing'" class="w-full max-w-2xl flex flex-col p-4">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full mb-8">
+        <button 
+          v-for="(ans, i) in answers" :key="i" 
+          @click="submitAnswer(ans)"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all break-words"
+        >
           {{ ans }}
         </button>
       </div>
-      <div class="chaos-buttons">
-        <button class="confused-btn" @click="sendConfused" :disabled="hasConfused">
+
+      <div class="flex flex-wrap justify-center gap-4 mt-4 border-t-4 border-black pt-8">
+        <button 
+          @click="sendConfused" 
+          :disabled="hasConfused"
+          class="px-6 py-3 font-bold font-mono border-4 border-dashed border-black transition-all
+                 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed
+                 enabled:bg-purple-300 enabled:hover:bg-purple-400 enabled:shadow-[4px_4px_0px_rgba(0,0,0,1)] enabled:active:translate-y-1 enabled:active:translate-x-1 enabled:active:shadow-none"
+        >
           {{ hasConfused ? "You are confused 😵‍💫" : "I'm confused" }}
         </button>
 
-        <button v-if="currentSettings?.secretButton" class="secret-btn" @click="triggerSecret">
+        <button 
+          v-if="currentSettings?.secretButton" 
+          @click="triggerSecret"
+          class="px-6 py-3 font-bold bg-black text-white border-4 border-black hover:bg-gray-800 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all animate-pulse"
+        >
           DO NOT CLICK
         </button>
 
-        <button v-if="currentSettings?.rageQuit" class="rage-btn" @click="triggerRageQuit">
+        <button 
+          v-if="currentSettings?.rageQuit" 
+          @click="triggerRageQuit"
+          class="px-6 py-3 font-black text-white bg-red-600 border-4 border-black hover:bg-red-700 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+        >
           RAGE QUIT
         </button>
       </div>
     </div>
 
-    <div v-else-if="screen === 'waiting'" class="waiting-msg">
-      <h2>Answer submitted!</h2>
-      <p>Wait for the results...</p>
+    <div v-else-if="screen === 'waiting'" class="w-full h-screen bg-yellow-300 flex flex-col items-center justify-center border-8 border-black p-4">
+      <h2 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase border-4 border-black bg-white px-8 py-4 shadow-[8px_8px_0px_rgba(0,0,0,1)] transform -rotate-2">
+        Answer submitted!
+      </h2>
+      <p class="text-2xl font-bold font-mono bg-black text-white px-6 py-2">
+        Wait for the results...
+      </p>
     </div>
 
-    <div v-else-if="screen === 'results'" class="results-screen" :class="{ 'win': isCorrect, 'lose': !isCorrect }">
-      <h1 v-if="isCorrect">Points?</h1>
-      <h1 v-else>No points?</h1>
+    <div 
+      v-else-if="screen === 'results'" 
+      class="w-full h-screen flex flex-col items-center justify-center p-4 transition-colors duration-500"
+      :class="isCorrect ? 'bg-green-400' : 'bg-red-500'"
+    >
+      <h1 class="text-6xl md:text-8xl font-black text-white mb-8 drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] uppercase">
+        {{ isCorrect ? 'Points?' : 'No points?' }}
+      </h1>
       
-      <img v-if="isCorrect" src="../../public/pictures/Points.png" alt="Megamind points" class="meme-img"/>
-      <img v-else src="../../public/pictures/No_points.png" alt="Megamind no points" class="meme-img"/>
+      <img 
+        v-if="isCorrect" 
+        src="../../public/pictures/Points.png" 
+        alt="Megamind points" 
+        class="w-full max-w-md border-8 border-black shadow-[12px_12px_0px_rgba(0,0,0,1)] transform rotate-1"
+      />
+      <img 
+        v-else 
+        src="../../public/pictures/No_points.png" 
+        alt="Megamind no points" 
+        class="w-full max-w-md border-8 border-black shadow-[12px_12px_0px_rgba(0,0,0,1)] transform -rotate-1"
+      />
     </div>
-  </div>np
+
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -47,7 +87,7 @@ const router = useRouter()
 const hasAnswered = ref(false)
 const roomCode = route.params.roomCode as string
 const answers = ref([])
-const screen = ref('playing') // 'playing', 'waiting', 'results'
+const screen = ref('playing') 
 const isCorrect = ref(false)
 const myAnswer = ref('') 
 const currentSettings = ref<any>({})
@@ -56,12 +96,11 @@ const hasConfused = ref(false)
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
-    currentSettings.value = data.settings || {} // On sauvergarde les réglages 
+    currentSettings.value = data.settings || {} 
     screen.value = 'playing'
     hasConfused.value = false
   })
 
-  // Ecoute de la révélation des résultats
   socket.on('results_revealed', (data: any) => {
     isCorrect.value = (myAnswer.value === data.correctAnswer)
     screen.value = 'results'
@@ -72,74 +111,52 @@ onMounted(() => {
     }
   })
 
-  // Quand le créateur passe à la question d'après
   socket.on('next_question_ready', () => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
       currentSettings.value = data.settings || {}
       screen.value = 'playing'
-      hasAnswered.value = false // On autorise le joueur à re-cliquer
+      hasAnswered.value = false 
       hasConfused.value = false
       myAnswer.value = ''
     })
   })
 
-  // Quand le jeu est totalement fini
   socket.on('game_over', () => {
-    alert("Le quiz est terminé ! TU peux retourner à l'accueil.")
+    alert("Le quiz est terminé ! Tu peux retourner à l'accueil.")
     router.push('/')
   })
 })
 
-// Fonction audio 
 const playSound = (soundName: string) => {
-  // Vérification de si le créateur à désactivé les sons (on l'autorise par défaut)
   if (currentSettings.value?.enableSounds === false) return;
-
-  // On lance le son
   const audio = new Audio(`/sounds/${soundName}.mp3`);
   audio.play().catch(error => {
-    console.warn("Le navigateur à bloqué l'audio :", error);
+    console.warn("Le navigateur a bloqué l'audio :", error);
   });
 }
 
 const submitAnswer = (answerText: string) => {
   myAnswer.value = answerText
   screen.value = 'waiting'
-  // On renvoie le code de la room ET la réponse !
   socket.emit('submit_answer', { roomCode, answer: answerText })
   playSound('ive-got-this')
 }
 
-// Fonction Confused
 const sendConfused = () => {
   if (hasConfused.value) return;
   hasConfused.value = true;
   socket.emit('im_confused', roomCode);
 }
 
-// Secret Button
 const triggerSecret = () => {
   socket.emit('trigger_secret', roomCode);
 }
 
-// Le Rage Quit (Insta-loose)
 const triggerRageQuit = () => {
-  // On soumet une réponse fausse au serveur
   socket.emit('submit_answer', { roomCode, answer: 'RAGE_QUIT_ABANDON' });
-  // On affiche directement le Megamind "No points?" au joueur
   isCorrect.value = false;
   screen.value = 'results';
   playSound('chicken-on-tree-screaming')
 }
 </script>
-
-<style scoped>
-.results-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; }
-.win { background-color: #4CAF50; } 
-.lose { background-color: #f44336; }
-.meme-img { max-width: 80%; max-height: 50vh; margin-top: 20px; border: 5px solid black; }
-.grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; height: 60vh; }
-.answer-btn { border: 2px solid black; font-size: 1.5rem; cursor: pointer; background: white; }
-.confused-btn { margin-top: 20px; padding: 10px; border: 1px dashed black; }
-</style>
