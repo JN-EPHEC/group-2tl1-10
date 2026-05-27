@@ -1,22 +1,66 @@
 <template>
-    <div class="taker-wrapper">
-        <div class="main-container" v-if="!isWaiting">
-            <h1 class="main-title">Join a Game</h1>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    
+    <div class="w-full max-w-md bg-white border-4 border-black p-8 md:p-12 flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)] relative transition-all">
 
-            <div class="form-group">
-                <input type="text" v-model="roomCode" class="dashed-input" placeholder="Room Code (ex: 1234)" />
-                <input type="text" v-model="username" class="dashed-input" placeholder="Your Nickname" />
-            </div>
+      <div v-if="!isWaiting" class="w-full flex flex-col items-center">
+        
+        <h1 class="text-4xl md:text-5xl font-black mb-10 text-center uppercase tracking-tight">
+          Join a Game
+        </h1>
 
-            <button class="join-btn" @click="joinGame" :disabled="!roomCode || !username">Join</button>
-            <button class="fraud-btn" @click="router.push('/')">Go back</button>
+        <div class="w-full flex flex-col gap-6 mb-8">
+          <input 
+            type="text" 
+            v-model="roomCode" 
+            class="w-full p-4 text-2xl font-black font-mono text-center uppercase border-4 border-dashed border-black outline-none bg-transparent focus:bg-yellow-200 transition-colors placeholder-gray-300" 
+            placeholder="[ ROOM CODE ]" 
+          />
+          <input 
+            type="text" 
+            v-model="username" 
+            class="w-full p-4 text-xl font-bold font-mono text-center border-4 border-dashed border-black outline-none bg-transparent focus:bg-cyan-200 transition-colors placeholder-gray-300" 
+            placeholder="[ YOUR NICKNAME ]" 
+          />
         </div>
 
-        <div class="main-container" v-else>
-            <h1 class="main-title">You're in!</h1>
-            <p style="font-size: 1.5rem; text-align: center;">Look at the main screen.<br>Waiting for the host to start...</p>
+        <button 
+          @click="joinGame" 
+          :disabled="!roomCode || !username"
+          class="w-full py-4 text-2xl font-black uppercase border-4 border-black transition-all mb-6
+                 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:translate-y-2 disabled:translate-x-2 disabled:cursor-not-allowed
+                 enabled:bg-green-400 enabled:hover:bg-green-500 enabled:shadow-[8px_8px_0px_rgba(0,0,0,1)] enabled:active:translate-y-2 enabled:active:translate-x-2 enabled:active:shadow-none"
+        >
+          Join
+        </button>
+        
+        <button 
+          @click="router.push('/')"
+          class="font-mono font-bold text-gray-500 hover:text-red-500 hover:underline transition-colors"
+        >
+          👈 nvm, go back
+        </button>
+      </div>
+
+      <div v-else class="w-full flex flex-col items-center">
+        
+        <h1 class="text-5xl md:text-6xl font-black mb-10 text-center text-white bg-green-500 px-6 py-2 border-4 border-black transform -rotate-2 shadow-[6px_6px_0px_rgba(0,0,0,1)]">
+          You're in!
+        </h1>
+        
+        <div class="border-4 border-black bg-gray-900 text-green-400 p-6 w-full text-center shadow-[6px_6px_0px_rgba(0,0,0,1)] mt-4">
+          <p class="text-xl font-mono mb-6 border-b-2 border-green-800 pb-4">
+            > Connection_Established
+          </p>
+          <p class="text-lg font-mono animate-pulse leading-relaxed">
+            Look at the main screen.<br>Waiting for the host to start...
+          </p>
         </div>
+
+      </div>
+
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -34,7 +78,7 @@ onMounted(() => {
 })
 
 const joinGame = () => {
-    // Envoie du code et du pseudo au serveur
+    // Envoi du code et du pseudo au serveur
     socket.emit('join_game', { roomCode: roomCode.value, username: username.value }, (Response: any) => {
         if (Response.success) {
             isWaiting.value = true // Ca marche, passage en mode attente
@@ -48,13 +92,3 @@ socket.on('game_started', () => {
     router.push(`/taker/game/${roomCode.value}`)
 })
 </script>
-
-<style scoped>
-.taker-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; }
-.main-container { border: 2px solid black; padding: 3rem; width: 500px; background-color: white; display: flex; flex-direction: column; align-items: center; gap: 2rem; }
-.form-group { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
-.dashed-input { border: 2px dashed black; padding: 1rem; font-size: 1.2rem; text-align: center; width: 100%; box-sizing: border-box; }
-button { border: 2px solid black; border-radius: 8px; background-color: white; cursor: pointer; padding: 1rem 2rem; font-size: 1.2rem; width: 100%; }
-button:hover:not(:disabled) { background-color: #eee; }
-.fraud-btn { border: none; text-decoration: underline; padding: 0.5rem; }
-</style>
