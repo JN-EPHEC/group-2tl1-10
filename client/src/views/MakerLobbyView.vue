@@ -1,28 +1,64 @@
 <template>
-    <div class="lobby-wrapper">
-        <div class="main-container">
-            <h1 class="main-title">Waiting for victims</h1>
-            <h2 class="room-code">Room code: <span>{{ roomCode || '...' }}</span></h2>
-            <div class="qr-placeholder">qr code maybe</div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    
+    <div class="w-full max-w-4xl bg-white border-4 border-black p-6 md:p-12 relative flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
 
-            <div class="players-box">
-                <h3>Players:</h3>
-                <div class="players-grid">
-                    <div v-for="(player, index) in players" :key="index" class="player-name">
-                        - {{ player }}
-                    </div>
-                </div>
-            </div>
+      <div class="md:absolute top-8 right-8 w-24 h-24 border-4 border-dashed border-black bg-pink-200 flex flex-col items-center justify-center text-center font-bold text-xs transform md:rotate-3 mb-6 md:mb-0 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+        <span>QR CODE</span>
+        <span>HERE</span>
+      </div>
 
-            <div class="bottom-controls">
-                <button class="exit-btn" @click="goBack">exit</button>
-                <button class="begin-btn" :disabled="players.length === 0" @click="beginQuiz">
-                    Begin quiz
-                </button>
-            </div>
+      <h1 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase tracking-tight">
+        Waiting for victims
+      </h1>
 
+      <div class="mb-12 flex flex-col items-center">
+        <h2 class="text-xl md:text-2xl font-bold mb-2 font-mono uppercase">Room code:</h2>
+        <div class="text-5xl md:text-7xl font-black font-mono bg-yellow-300 border-4 border-black px-8 py-4 shadow-[8px_8px_0px_rgba(0,0,0,1)] transform -rotate-1">
+          {{ roomCode || '...' }}
         </div>
+      </div>
+
+      <div class="w-full border-4 border-black bg-gray-900 text-green-400 p-6 mb-12 shadow-[8px_8px_0px_rgba(0,0,0,1)] min-h-[250px]">
+        
+        <h3 class="text-center font-mono text-xl mb-6 border-b-4 border-green-800 pb-4 uppercase tracking-widest">
+          > Connected_Entities : [ {{ players.length }} ]
+        </h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 font-mono text-lg md:text-xl">
+          <div v-for="(player, index) in players" :key="index" class="flex items-center gap-2 truncate">
+            <span class="text-pink-500 animate-pulse">></span> {{ player }}
+          </div>
+          
+          <div v-if="players.length === 0" class="col-span-full text-center text-green-700 animate-pulse mt-8">
+            _ waiting for incoming connections...
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse md:flex-row justify-between w-full gap-6">
+        
+        <button 
+          @click="goBack"
+          class="px-8 py-4 text-xl font-bold bg-white border-4 border-black hover:bg-gray-200 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+        >
+          abort / exit
+        </button>
+        
+        <button 
+          :disabled="players.length === 0" 
+          @click="beginQuiz"
+          class="px-10 py-4 text-2xl font-black uppercase border-4 border-black transition-all 
+                 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:translate-y-2 disabled:translate-x-2 disabled:cursor-not-allowed
+                 enabled:bg-cyan-300 enabled:hover:bg-cyan-400 enabled:shadow-[8px_8px_0px_rgba(0,0,0,1)] enabled:active:translate-y-2 enabled:active:translate-x-2 enabled:active:shadow-none"
+        >
+          Begin quiz
+        </button>
+        
+      </div>
+
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -38,22 +74,18 @@ const players = ref<string[]>([])
 const quizId = route.params.id
 
 onMounted(() => {
-    // On se connecte au Socket
     socket.connect()
 
-    // On demande au serveur de créer la game
     socket.emit('create_game', quizId, (Response: any) => {
         roomCode.value = Response.roomCode
     })
 
-    // On écoute l'arrivée des victimes (joueurs)
     socket.on('player_joined', (username: string) => {
         players.value.push(username)
     })
 })
 
 onUnmounted(() => {
-    // On nettoie les écouteurs quand on quitte la page
     socket.off('player_joined')
 })
 
@@ -65,28 +97,7 @@ const beginQuiz = () => {
     socket.emit('start_game', roomCode.value)
 }
 
-// On écoute le signale de départ pour rediriger le créateur aussi
 socket.on('game_started', () => {
     router.push(`/maker/game/${roomCode.value}`)
 })
 </script>
-
-<style>
-.lobby-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; font-family: sans-serif; }
-.main-container { border: 2px solid black; padding: 2rem 3rem; width: 800px; background-color: white; display: flex; flex-direction: column; align-items: center; position: relative; }
-
-.main-title { font-size: 3rem; margin-bottom: 0.5rem; }
-.room-code { font-size: 2rem; font-weight: normal; margin-bottom: 2rem; }
-.room-code span { font-weight: bold; letter-spacing: 2px; }
-
-.qr-placeholder { position: absolute; top: 2rem; right: 2rem; border: 2px solid black; padding: 1rem; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; }
-
-.players-box { border: 2px solid black; width: 100%; min-height: 200px; padding: 1rem; margin-bottom: 2rem; }
-.players-box h3 { text-align: center; text-decoration: underline; font-size: 1.5rem; margin-bottom: 1.5rem; }
-.players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; font-size: 1.2rem; }
-
-.bottom-controls { display: flex; justify-content: space-between; width: 100%; }
-button { border: 2px solid black; border-radius: 8px; background-color: white; cursor: pointer; padding: 0.8rem 2rem; font-size: 1.2rem; transition: 0.2s; }
-button:hover:not(:disabled) { background-color: #eee; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-</style>
