@@ -1,45 +1,62 @@
 <template>
-  <div class="home-wrapper">
-    <div class="home-container">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    
+    <div class="w-full max-w-4xl bg-white border-4 border-black p-10 md:p-16 flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
       
-      <!-- Titre aléatoire WTF -->
-      <h1 class="main-title">{{ currentTitle }}</h1>
+      <h1 class="text-4xl md:text-5xl font-black mb-16 text-center uppercase tracking-tight font-mono">
+        {{ currentTitle }}
+      </h1>
 
-      <div class="roles-container">
-        <!-- Côté Créateur -->
-        <div class="role-column">
-          <button class="big-btn" @click="router.push('/maker')">I'm a quiz maker</button>
+      <div class="flex flex-col md:flex-row gap-8 md:gap-16 mb-16 w-full justify-center">
+        
+        <div class="flex flex-col items-center gap-4 w-full md:w-1/2">
+          <button 
+            @click="router.push('/maker')"
+            class="w-full py-6 text-2xl font-bold bg-yellow-300 border-4 border-black hover:bg-yellow-400 transition-transform active:translate-y-2 active:translate-x-2 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+          >
+            I'm a quiz maker
+          </button>
         </div>
 
-        <!-- Côté Joueur -->
-        <div class="role-column">
-          <button class="big-btn" @click="router.push('/taker')">I'm a quiz taker</button>
+        <div class="flex flex-col items-center gap-4 w-full md:w-1/2">
+          <button 
+            @click="router.push('/taker')"
+            class="w-full py-6 text-2xl font-bold bg-cyan-300 border-4 border-black hover:bg-cyan-400 transition-transform active:translate-y-2 active:translate-x-2 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+          >
+            I'm a quiz taker
+          </button>
+          
           <input 
             type="text" 
             v-model="displayName" 
-            class="display-name-input" 
-            placeholder="display name" 
+            class="w-full p-3 text-center border-4 border-dashed border-black outline-none text-xl font-mono bg-transparent focus:bg-pink-100 transition-colors placeholder-gray-400" 
+            placeholder="[ enter display name ]" 
           />
         </div>
       </div>
 
-      <!-- Section du bas : Connexion ou Profil -->
-      <div class="bottom-section">
-        <!-- V-IF : Si l'utilisateur n'est PAS connecté, on montre SEULEMENT ce bouton -->
-        <button v-if="!authStore.isLoggedIn" class="login-btn" @click="goToLogin">
-          log in
+      <div class="flex justify-center w-full mt-4">
+        
+        <button 
+          v-if="!authStore.isLoggedIn" 
+          @click="goToLogin"
+          class="px-12 py-4 text-xl font-bold bg-white border-4 border-black hover:bg-gray-200 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+        >
+          LOG IN
         </button>
 
-        <!-- V-ELSE : Si l'utilisateur EST connecté, on montre ce BLOC ENTIER -->
-        <div v-else class="logged-in-container">
-          <div class="logged-in-box">
+        <div v-else class="flex flex-col items-center gap-4">
+          <div class="px-8 py-4 border-4 border-black font-mono text-xl bg-green-300 font-bold shadow-[6px_6px_0px_rgba(0,0,0,1)]">
             logged in as &lt;{{ authStore.user?.pseudo }}&gt;
           </div>
-          <!-- Le bouton de déconnexion est bien caché DANS le bloc connecté -->
-          <button class="logout-btn" @click="handleLogout">
-            get me outta here
+          <button 
+            @click="handleLogout"
+            class="px-6 py-2 text-sm font-bold font-mono text-red-600 bg-white border-4 border-dashed border-red-600 hover:bg-red-600 hover:text-white transition-colors"
+          >
+            ! get me outta here !
           </button>
         </div>
+
       </div>
     </div>
   </div>
@@ -57,7 +74,7 @@ const authStore = useAuthStore()
 // --- LE TITRE ALÉATOIRE (L'absurdité commence) ---
 const absurdTitles = [
   "Super duper memeable quiz maker 9000",
-  "Le Quiz qui va te faire rater ton semestre",
+  "Le Quiz qui va te faire rater tes partiels de Réseaux III",
   "Avez-vous essayé de l'éteindre et de le rallumer ?",
   "Encore un projet codé à 3h du matin",
   "Error 404 : Brain not found"
@@ -68,11 +85,12 @@ onMounted(() => {
   // Connection au serveur
   socket.connect();
 
-  // On écoute la réponse du serveur
+  // On écoute la réponse du serveur (Garder ça pour tes tests si besoin, sinon à virer)
   socket.on("pong", (message) => {
     console.log("Réponse du serveur :", message);
     alert("Socket.io fonctionne !")
   });
+  
   // On choisit un titre au hasard au chargement de la page
   const randomIndex = Math.floor(Math.random() * absurdTitles.length)
   currentTitle.value = absurdTitles[randomIndex]
@@ -80,10 +98,9 @@ onMounted(() => {
 
 // Fonctions audio 
 const playSound = (soundName: string) => {
-  // On lance le son
   const audio = new Audio(`/sounds/${soundName}.mp3`);
   audio.play().catch(error => {
-    console.warn("Le navigateur à bloqué l'audio :", error);
+    console.warn("Le navigateur a bloqué l'audio :", error);
   });
 }
 
@@ -101,115 +118,3 @@ const handleLogout = () => {
   playSound('tuco-get-out')
 }
 </script>
-
-<style scoped>
-/* Pour centrer la grosse boîte de la maquette au milieu de l'écran */
-.home-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-  font-family: sans-serif;
-}
-
-/* La grosse boîte */
-.home-container {
-  border: 2px solid black;
-  padding: 4rem 2rem;
-  width: 800px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-}
-
-.main-title {
-  font-size: 2.5rem;
-  margin-bottom: 4rem;
-  text-align: center;
-}
-
-.roles-container {
-  display: flex;
-  gap: 4rem;
-  margin-bottom: 4rem;
-}
-
-.role-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.big-btn {
-  padding: 1.5rem 2rem;
-  font-size: 1.5rem;
-  border: 1px solid black;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.big-btn:hover {
-  background-color: #f0f0f0;
-  transform: scale(1.05); /* Petit effet de zoom absurde */
-}
-
-.display-name-input {
-  padding: 0.5rem;
-  text-align: center;
-  border: 1px dashed black;
-  outline: none;
-  font-size: 1rem;
-}
-
-.bottom-section {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.login-btn {
-  padding: 1rem 3rem;
-  font-size: 1.2rem;
-  border: 1px solid black;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-}
-
-.login-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.logged-in-box {
-  padding: 1rem 2rem;
-  border: 1px solid black;
-  font-family: monospace; /* Pour le style <user> un peu hackerman */
-  font-size: 1.2rem;
-}
-
-.logged-in-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.logout-btn {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  border: 1px dashed red;
-  background-color: transparent;
-  color: red;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.logout-btn:hover {
-  background-color: #ffe6e6;
-}
-</style>
