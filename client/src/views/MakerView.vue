@@ -1,21 +1,41 @@
 <template>
-    <div class="maker-wrapper">
-        <div class="main-container">
-            <!-- Les titres -->
-             <h1 class="main-title">You are the creator</h1>
-             <p class="subtitle">Abuse your power</p>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    
+    <div class="w-full max-w-3xl bg-white border-4 border-black p-10 md:p-16 flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
+      
+      <h1 class="text-4xl md:text-5xl font-black mb-2 text-center uppercase tracking-tight">
+        You are the creator
+      </h1>
+      <p class="text-xl md:text-2xl font-mono font-bold mb-16 text-center bg-black text-white px-4 py-1 inline-block transform -rotate-2">
+        Abuse your power
+      </p>
 
-             <!-- Les deux boutons d'action principaux -->
-              <div class="action-buttons">
-                <button class="action-btn" @click="goToNewQuiz">New quiz</button>
-                <button class="action-btn" @click="goToMyQuizzes">My quizes</button>
-              </div>
+      <div class="flex flex-col md:flex-row gap-6 md:gap-12 w-full justify-center mb-16">
+        
+        <button 
+          @click="goToNewQuiz"
+          class="w-full md:w-auto px-8 py-6 text-2xl font-bold bg-fuchsia-300 border-4 border-black hover:bg-fuchsia-400 transition-transform active:translate-y-2 active:translate-x-2 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+        >
+          New quiz
+        </button>
+        
+        <button 
+          @click="goToMyQuizzes"
+          class="w-full md:w-auto px-8 py-6 text-2xl font-bold bg-lime-300 border-4 border-black hover:bg-lime-400 transition-transform active:translate-y-2 active:translate-x-2 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+        >
+          My quizes
+        </button>
+      </div>
 
-              <!-- Bouton de retour honteux -->
-              <button class="fraud-btn" @click="goToHome">jk I'm a fraud</button>
+      <button 
+        @click="goToHome"
+        class="px-6 py-3 text-lg font-bold font-mono text-black bg-white border-4 border-dashed border-black hover:bg-red-400 hover:border-solid transition-all active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+      >
+        jk I'm a fraud
+      </button>
 
-        </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -23,8 +43,6 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter()
 
-// Pour l'instant, ces boutons ne font rien à part un log,
-// on créera les interfaces correspondantes plus tard ! 
 const goToNewQuiz = () => {
     console.log("Direction la création d'un nouveau quiz...")
     router.push('/maker/edit')
@@ -34,81 +52,7 @@ const goToMyQuizzes = () => {
     router.push('/maker/list')
 }
 
-// Le bouton de retour vers l'accueil 
 const goToHome = () => {
     router.push('/')
 }
 </script>
-
-<style scoped>
-/* --- MISE EN PAGE GLOBALE --- */
-.maker-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    font-family: sans-serif;
-}
-
-.main-container {
-    border: 2px solid black;
-    padding: 4rem 3rem;
-    width: 800px;
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-}
-
-/* --- TITRES --- */
-.main-title {
-    font-size: 3rem;
-    margin: 0 0 0.5rem 0;
-    text-align: center;
-}
-
-.subtitle {
-    font-size: 1.8rem;
-    margin: 0 0 4rem 0;
-    text-align: center;
-}
-
-/* --- BOUTONS PRINCIPAUX --- */
-.action-buttons {
-    display: flex;
-    gap: 3rem;
-    margin-bottom: 5rem;
-}
-
-.action-btn {
-    padding: 1.5rem 3rem;
-    font-size: 1.5rem;
-    border: 2px solid black;
-    border-radius: 12px;
-    background-color: white;
-    cursor: pointer;
-    transition: transform 0.1s, background-color 0.2s;
-}
-
-.action-btn:hover {
-    background-color: #f0f0f0;
-    transform: scale(1.05);
-}
-
-/* --- BOUTON DE RETOUR (FRAUD) --- */
-.fraud-btn {
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    border: 2px solid black;
-    border-radius: 8px;
-    background-color: white;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.fraud-btn:hover {
-    background-color: #ffe6e6;
-}
-</style>
