@@ -37,7 +37,7 @@
         <div class="answers-grid">
           <div v-for="(ans, i) in currentQ.answers" :key="i" 
                class="answer-box" 
-               :class="{ 'correct-answer': ans === correctAnswer }">
+               :class="{ 'correct-answer': correctAnswer.includes(ans) }">
             {{ ans }}
           </div>
         </div>
@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -103,22 +103,37 @@ const timer = ref(15)
 const confusedCount = ref(0)
 const roomCode = route.params.roomCode as string
 const screen = ref('playing') // 'playing', 'results', 'leaderboard'
-const correctAnswer = ref('')
+const correctAnswer = ref<string[]>([])
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
+const backgroundMusic = new Audio('/sounds/ambiance-absurde.mp3') // TODO: Mettre une vrai musique
+backgroundMusic.loop = true
+backgroundMusic.volume = 0.3
 
 let timerInterval: any = null;
+
+const playSound = (soundName: string) => {
+  // Vérification de si le créateur à désactivé les sons (on l'autorise par défaut)
+  // if (currentSettings.value?.enableSounds === false) return;
+
+  // On lance le son
+  const audio = new Audio(`/sounds/${soundName}.mp3`);
+  audio.play().catch(error => {
+    console.warn("Le navigateur à bloqué l'audio :", error);
+  });
+}
 
 onMounted(() => {
   // Dès que la page s'affiche, on réclame la question
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
+    timer.value = data.timeLimit || 15
     startTimer()
   })
 
   // Révélations des résultats
   socket.on('results_revealed', (data: any) => {
-    correctAnswer.value = data.correctAnswer
+    correctAnswer.value = data.correctAnswers
     leaderboard.value = data.leaderboard
     screen.value = 'results' // Affichage de la bonne réponse
   })
@@ -129,7 +144,7 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       currentQ.value = data
       screen.value = 'playing'
-      timer.value = 15
+      timer.value = data.timeLimit || 15
       confusedCount.value = 0
       startTimer()
     })
@@ -138,7 +153,9 @@ onMounted(() => {
   // Mise à jour du compteur de confusion
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-    // * Plus tard : if (count > 3) palyDangerSound() 
+    if (count >= 0) {
+      playSound('ia-ia-ahh-yeye-yeye-lovely-sad')
+    }
   })
 
   // Activation du Rickroll
@@ -146,12 +163,27 @@ onMounted(() => {
     isRickrolling.value = true;
     // ON cache le rickroll après 5 secondes
     setTimeout(() => { isRickrolling.value = false; }, 5000);
+    playSound('rickroll-good')
+  })
+
+  socket.on("all_players_answered", () => {
+    showAnswer();
   })
 
   socket.on('game_over', () => {
+    backgroundMusic.pause()
     alert("C'est la fin du Quiz ! Admirez le classement final.")
     // On laisse le créateur sur l'écran 'leaderboard' pour qu'il voie le podium 
   })
+
+  backgroundMusic.play().catch(error => {
+    console.warn("Le navigateur a bloqué l'autoplay de la musique :", error)
+  })
+})
+
+onUnmounted(() => {
+  backgroundMusic.pause();
+  backgroundMusic.currentTime = 0; // Remise de la piste à zéro
 })
 
 const startTimer = () => {

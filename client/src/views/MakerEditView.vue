@@ -66,12 +66,21 @@
         <div class="settings-box">
           <!-- Toggles WTF -->
           <div class="setting-row">
+            <div class="toggle-switch"
+                 :class="{ 'is-correct': activeQ.settings.enableSounds !== false }"
+                 @click="activeQ.settings.enableSounds = activeQ.settings.enableSounds === false ? true : false">
+              <div class="toggle-knob"></div>
+            </div>
+            <span>enable absurd sound 🔊</span>
+          </div>
+          
+          <div class="setting-row">
             <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.rageQuit }" @click="activeQ.settings.rageQuit = !activeQ.settings.rageQuit">
               <div class="toggle-knob"></div>
             </div>
             <span>enable rage quit</span>
           </div>
-          
+
           <div class="setting-row">
             <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.secretButton }" @click="activeQ.settings.secretButton = !activeQ.settings.secretButton">
               <div class="toggle-knob"></div>
@@ -79,10 +88,27 @@
             <span>enable secret button</span>
           </div>
 
+          <div class="setting-row">
+            <div class="toggle-switch"
+                 :class="{ 'is-correct': activeQ.settings.jumpingButtons }"
+                 @click="activeQ.settings.jumpingButtons = ! activeQ.settings.jumpingButtons">
+                <div class="toggle-knob"></div>
+              </div>
+              <span>enable jumping buttons</span>
+          </div>
+
           <!-- Multiplicateur et Sons -->
           <div class="setting-row">
             <input type="number" v-model="activeQ.settings.scoreMultiplier" class="dashed-input tiny-input" />
             <span>score multiplier</span>
+          </div>
+
+          <div class="setting-row">
+            <input type="number"
+                   v-model.number="activeQ.settings.timeLimit"
+                   class="dashed-input tiny-input"
+                   placeholder="15" />
+            <span>time limit (seconds)</span>
           </div>
 
           <div class="setting-row" v-for="sound in ['win', 'firstWin', 'lose', 'firstLose']" :key="sound">

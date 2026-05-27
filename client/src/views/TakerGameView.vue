@@ -2,8 +2,12 @@
   <div class="taker-game">
     <div v-if="screen === 'playing'" class="answers-layout">
       <div class="grid-2x2">
-        <button v-for="(ans, i) in answers" :key="i" 
-                class="answer-btn" @click="submitAnswer(ans)">
+        <button 
+          v-for="(ans, index) in answers"
+          :key="index"
+          class="answer-btn"
+          @click="submitAnswer(ans)"
+          @mouseenter="hoverButton(index)"  :style="buttonStyles[index]"    >
           {{ ans }}
         </button>
       </div>
@@ -31,8 +35,8 @@
       <h1 v-if="isCorrect">Points?</h1>
       <h1 v-else>No points?</h1>
       
-      <img v-if="isCorrect" src="https://i.imgflip.com/6c986v.jpg" alt="Megamind points" class="meme-img"/>
-      <img v-else src="https://i.kym-cdn.com/entries/icons/original/000/039/393/cover2.jpg" alt="Megamind no points" class="meme-img"/>
+      <img v-if="isCorrect" src="../../public/pictures/Points.png" alt="Megamind points" class="meme-img"/>
+      <img v-else src="../../public/pictures/No_points.png" alt="Megamind no points" class="meme-img"/>
     </div>
   </div>
 </template>
@@ -53,6 +57,26 @@ const myAnswer = ref('')
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
 
+// Pour stocker le style dynamique de chaque bouton
+const buttonStyles = ref<Record<number, any>>({})
+
+// La fonction qui fait sauter le bouton
+const hoverButton = (index: number) => {
+  // On ne bouge que si le créateur a activé l'option pour cette question
+  if (currentSettings.value?.jumpingButtons) {
+    // Déplacement aléatoire entre -150px et +150px sur X et Y
+    const randomX = Math.floor(Math.random() * 300) - 150
+    const randomY = Math.floor(Math.random() * 300) - 150
+
+    // On applique le style uniquement au bouton survolé
+    buttonStyles.value[index] = {
+      transform: `translate(${randomX}px, ${randomY}px)`,
+      transition: 'transform 0.15s ease-out', // Petit effet de glissement
+      zIndex: 10 // Pour s'assurer qu'il passe au-dessus des autres boutons
+    }
+  }
+}
+
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
@@ -63,8 +87,18 @@ onMounted(() => {
 
   // Ecoute de la révélation des résultats
   socket.on('results_revealed', (data: any) => {
-    isCorrect.value = (myAnswer.value === data.correctAnswer)
+    if (data.correctAnswers.length === 0) {
+      // Si aucune bonne réponse, on gagne si on est resté sage sans cliquer
+      isCorrect.value = (myAnswer.value === '')
+    } else {
+      isCorrect.value = data.correctAnswers.includes(myAnswer.value)
+    }
     screen.value = 'results'
+    if (isCorrect.value) {
+      playSound('mlg-horns-sound-effect')
+    } else {
+      playSound('fahhhhhhhhhhhhhh')
+    }
   })
 
   // Quand le créateur passe à la question d'après
@@ -73,6 +107,7 @@ onMounted(() => {
       answers.value = data.answers
       currentSettings.value = data.settings || {}
       screen.value = 'playing'
+      buttonStyles.value = {}
       hasAnswered.value = false // On autorise le joueur à re-cliquer
       hasConfused.value = false
       myAnswer.value = ''
@@ -86,11 +121,24 @@ onMounted(() => {
   })
 })
 
+// Fonction audio 
+const playSound = (soundName: string) => {
+  // Vérification de si le créateur à désactivé les sons (on l'autorise par défaut)
+  if (currentSettings.value?.enableSounds === false) return;
+
+  // On lance le son
+  const audio = new Audio(`/sounds/${soundName}.mp3`);
+  audio.play().catch(error => {
+    console.warn("Le navigateur à bloqué l'audio :", error);
+  });
+}
+
 const submitAnswer = (answerText: string) => {
   myAnswer.value = answerText
   screen.value = 'waiting'
   // On renvoie le code de la room ET la réponse !
   socket.emit('submit_answer', { roomCode, answer: answerText })
+  playSound('ive-got-this')
 }
 
 // Fonction Confused
@@ -112,6 +160,7 @@ const triggerRageQuit = () => {
   // On affiche directement le Megamind "No points?" au joueur
   isCorrect.value = false;
   screen.value = 'results';
+  playSound('chicken-on-tree-screaming')
 }
 </script>
 
