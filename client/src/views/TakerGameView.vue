@@ -7,8 +7,9 @@
         <button 
           v-for="(ans, i) in answers" :key="ans + i" 
           @click="submitAnswer(ans)"
-          @mouseenter="jumpButton"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-transform duration-200 break-words"
+          @mouseenter="jumpButton(i)"
+          :style="{ top: jumpPositions[i]?.top + 'px', left: jumpPositions[i]?.left + 'px', position: 'relative' }"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words"
         >
           {{ ans }}
         </button>
@@ -93,8 +94,9 @@ const isCorrect = ref(false)
 const myAnswer = ref('') 
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
+const jumpPositions = ref<{top: number, left: number}[]>([])
 
-// Fonction vitale pour transformer les paramètres "faux" du backend en vrais booléens
+// Analyse ultra-robuste des paramètres
 const parseSettings = (rawSettings: any) => {
   let parsed = rawSettings;
   if (typeof rawSettings === 'string') {
@@ -112,17 +114,26 @@ onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
     currentSettings.value = parseSettings(data.settings)
+    // Initialise les positions des boutons à 0
+    jumpPositions.value = data.answers.map(() => ({top: 0, left: 0}))
     screen.value = 'playing'
     hasConfused.value = false
   })
 
   socket.on('results_revealed', (data: any) => {
-    // On sécurise la lecture de la bonne réponse (String OU Tableau)
-    const correctAns = data.correctAnswers || data.correctAnswer || [];
-    if (Array.isArray(correctAns)) {
-      isCorrect.value = correctAns.includes(myAnswer.value);
+    // On force la réponse en Tableau pour éviter les crashs (String vs Array)
+    let correct = data.correctAnswers || data.correctAnswer;
+    if (correct === undefined || correct === null) correct = [];
+    if (!Array.isArray(correct)) correct = [correct];
+
+    if (myAnswer.value === 'RAGE_QUIT_ABANDON') {
+      isCorrect.value = false;
+    } else if (correct.length === 0) {
+      // S'il n'y a AUCUNE bonne réponse définie, tout le monde gagne !
+      isCorrect.value = true;
     } else {
-      isCorrect.value = (myAnswer.value === correctAns);
+      // Sinon, on vérifie si notre réponse est dans la liste des bonnes réponses
+      isCorrect.value = correct.includes(myAnswer.value);
     }
 
     screen.value = 'results'
@@ -137,6 +148,7 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
       currentSettings.value = parseSettings(data.settings)
+      jumpPositions.value = data.answers.map(() => ({top: 0, left: 0}))
       screen.value = 'playing'
       hasAnswered.value = false 
       hasConfused.value = false
@@ -158,13 +170,12 @@ const playSound = (soundName: string) => {
   });
 }
 
-// La fameuse mécanique du bouton fuyant
-const jumpButton = (e: Event) => {
+const jumpButton = (index: number) => {
   if (!currentSettings.value?.jumpingButtons) return;
-  const target = e.target as HTMLElement;
-  const randomX = Math.floor(Math.random() * 200) - 100; // Entre -100px et +100px
+  // Déplacement aléatoire entre -100px et +100px
+  const randomX = Math.floor(Math.random() * 200) - 100;
   const randomY = Math.floor(Math.random() * 200) - 100;
-  target.style.transform = `translate(${randomX}px, ${randomY}px)`;
+  jumpPositions.value[index] = { top: randomY, left: randomX };
 }
 
 const submitAnswer = (answerText: string) => {

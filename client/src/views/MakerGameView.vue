@@ -143,7 +143,7 @@ const timer = ref(15)
 const confusedCount = ref(0)
 const roomCode = route.params.roomCode as string
 const screen = ref('playing') 
-const correctAnswer = ref<any>([]) // Peut être un tableau ou une string
+const correctAnswersList = ref<string[]>([]) // Transformé en un vrai tableau
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
 
@@ -156,12 +156,11 @@ const playSound = (soundName: string) => {
   });
 }
 
-// Fonction pour évaluer si l'affichage doit être vert
+// Vérification robuste
 const isAnswerCorrect = (ans: string) => {
-  if (Array.isArray(correctAnswer.value)) {
-    return correctAnswer.value.includes(ans);
-  }
-  return correctAnswer.value === ans;
+  // S'il n'y a aucune bonne réponse définie, toutes les réponses s'allument en vert
+  if (correctAnswersList.value.length === 0) return true;
+  return correctAnswersList.value.includes(ans);
 }
 
 onMounted(() => {
@@ -171,8 +170,12 @@ onMounted(() => {
   })
 
   socket.on('results_revealed', (data: any) => {
-    // On sécurise la récupération
-    correctAnswer.value = data.correctAnswers || data.correctAnswer || [];
+    // Force la création d'un tableau propre peu importe ce qu'envoie le backend
+    let correct = data.correctAnswers || data.correctAnswer;
+    if (correct === undefined || correct === null) correct = [];
+    if (!Array.isArray(correct)) correct = [correct];
+    
+    correctAnswersList.value = correct;
     leaderboard.value = data.leaderboard
     screen.value = 'results' 
   })
