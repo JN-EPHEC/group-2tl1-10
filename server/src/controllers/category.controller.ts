@@ -24,15 +24,18 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
             for (const q of questions) {
                 const answerTexts = q.answers.map((ans: any) => ans.text);
 
-                const correctAns = q.answers.find((ans: any) => ans.isCorrect);
-                const correctAnswerText = correctAns ? correctAns.text : null;
+                // Récupérer TOUTES les réponses correctes, pas juste la première
+                const correctAnswers = q.answers
+                    .filter((ans: any) => ans.isCorrect)
+                    .map((ans: any) => ans.text);
 
                 const newQuestion = await Question.create({
                     title: q.text,
                     possibleAnswers: answerTexts,
-                    correctAnswer: correctAnswerText,
+                    correctAnswer: correctAnswers.length > 0 ? JSON.stringify(correctAnswers) : null,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : [],
                     categoryId: newCategory.id,
-                    difficulty: 1
+                    difficulty: q.timeLimit || 1
                     // TODO : Ajouter time limit pour le temps
                 });
 
@@ -40,6 +43,8 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
                     await Setting.create({
                         rageQuit: q.settings.rageQuit,
                         secretButton: q.settings.secretButton,
+                        jumpingButtons: q.settings.jumpingButtons,
+                        enableSounds: q.settings.enableSounds,
                         scoreMultiplier: q.settings.scoreMultiplier,
                         winSound: q.settings.winSound,
                         firstWinSound: q.settings.firstWinSound,
@@ -128,15 +133,19 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
         if (questions && Array.isArray(questions)) {
             for (const q of questions) {
                 const answerTexts = q.answers.map((ans: any) => ans.text);
-                const correctAns = q.answers.find((ans: any) => ans.isCorrect);
-                const correctAnswerText = correctAns ? correctAns.text : null;
+
+                // Récupérer TOUTES les réponses correctes, pas juste la première
+                const correctAnswers = q.answers
+                    .filter((ans: any) => ans.isCorrect)
+                    .map((ans: any) => ans.text);
 
                 const newQuestion = await Question.create({
                     title: q.text,
                     possibleAnswers: answerTexts,
-                    correctAnswer: correctAnswerText,
+                    correctAnswer: correctAnswers.length > 0 ? JSON.stringify(correctAnswers) : null,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : [],
                     categoryId: id, // L'id du quiz existant
-                    difficulty: 1
+                    difficulty: q.timeLimit || 1
                 });
 
                 if (q.settings) {

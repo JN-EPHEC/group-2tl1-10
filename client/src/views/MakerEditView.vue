@@ -251,19 +251,32 @@ onMounted(async () => {
 
         if (data.questions) {
           quizDraft.value.questions = data.questions.map((q: any) => {
+            // Gérer les réponses correctes (peuvent être une string, un JSON string, ou un array)
+            let correctAnswers: string[] = [];
+            if (Array.isArray(q.correctAnswers)) {
+              correctAnswers = q.correctAnswers;
+            } else if (typeof q.correctAnswer === 'string' && q.correctAnswer) {
+              try {
+                const parsed = JSON.parse(q.correctAnswer);
+                correctAnswers = Array.isArray(parsed) ? parsed : [parsed];
+              } catch {
+                correctAnswers = [q.correctAnswer];
+              }
+            }
+
             return {
               id: q.id,
               text: q.title,
               timeLimit: q.difficulty,
               answers: q.possibleAnswers.map((ansText: string) => ({
                 text: ansText,
-                isCorrect: ansText === q.correctAnswer
+                isCorrect: correctAnswers.includes(ansText)
               })),
               settings: q.settings || {
                 enableSounds: false,
                 jumpingButtons: false,
-                rageQuit: false, 
-                secretButton: false, 
+                rageQuit: false,
+                secretButton: false,
                 scoreMultiplier: 1
               }
             }

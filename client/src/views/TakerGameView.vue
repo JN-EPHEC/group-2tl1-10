@@ -8,13 +8,12 @@
           v-for="(ans, i) in answers" :key="ans + i"
           @click="submitAnswer(ans)"
           @mouseenter="jumpButton(i)"
-          :disabled="hasNoCorrectAnswer"
           :style="currentSettings?.jumpingButtons ? {
             top: `${jumpPositions[i]?.y || 0}px`,
             left: `${jumpPositions[i]?.x || 0}px`,
             position: 'absolute'
           } : {}"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10"
         >
           {{ ans }}
         </button>
