@@ -8,6 +8,8 @@ const Setting = sequelize.define('Setting', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     rageQuit: { type: DataTypes.BOOLEAN, defaultValue: false },
     secretButton: { type: DataTypes.BOOLEAN, defaultValue: false },
+    jumpingButtons: { type: DataTypes.BOOLEAN, defaultValue: false },
+    enableSounds: { type: DataTypes.BOOLEAN, defaultValue: false },
     scoreMultiplier: { type: DataTypes.FLOAT, defaultValue: 1.0 },
     winSound: { type: DataTypes.STRING, allowNull: true },
     firstWinSound: { type: DataTypes.STRING, allowNull: true },

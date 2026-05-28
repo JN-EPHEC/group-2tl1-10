@@ -150,7 +150,15 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 
                 if (q.settings) {
                     await Setting.create({
-                        ...q.settings, // On copie tous les champs des réglages
+                        rageQuit: q.settings.rageQuit,
+                        secretButton: q.settings.secretButton,
+                        jumpingButtons: q.settings.jumpingButtons,
+                        enableSounds: q.settings.enableSounds,
+                        scoreMultiplier: q.settings.scoreMultiplier,
+                        winSound: q.settings.winSound,
+                        firstWinSound: q.settings.firstWinSound,
+                        loseSound: q.settings.loseSound,
+                        firstLoseSound: q.settings.firstLoseSound,
                         questionId: newQuestion.id
                     });
                 }
