@@ -74,16 +74,12 @@ app.use('/api/categories', categoryRoutes);
 async function startApp() {
     try {
         await sequelize.authenticate();
-        console.log('Connexion à SQLite établie');
-        await sequelize.sync({ alter: true });
-        console.log("Synchronisation terminé");
-
-        // Changement pour httpServer.listen() pour lancer le serveur http
+        console.log('Connexion à la base de données PostgreSQL établie avec succès.');
         httpServer.listen(PORT, '0.0.0.0', () => {
             console.log(`Serveur prêt sur le port ${PORT}`);
         });
     } catch (error) {
-        console.error('Erreur de connexion avec SQlite:', error);
+        console.error('Erreur critique de connexion avec la base de données :', error);
     }
 };
 
