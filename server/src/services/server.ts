@@ -1,22 +1,18 @@
 import 'dotenv/config';
 import express, { response, type Application, type Request, type Response} from 'express'; 
-import userRoutes from "../routes/userRoutes"; // Importation de la route user
-import adminRoutes from "../routes/adminRoutes"; // Importation de la route admin
-import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
-import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
-import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
-import categoryRoutes from "../routes/category.routes"; // Importation de la route pour les categories 
+import authentificationRoutes from "../routes/auth.routes";
+import questionRoutes from "../routes/question.routes";
+import scoreRoutes from "../routes/score.routes";
+import categoryRoutes from "../routes/category.routes"; 
 import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from '../config/swagger';
 import cors from 'cors';
-import Database from '../config/database'; // Import de la classe
-import authRoutes from "../routes/authRoutes";
-import profileRoutes from "../routes/profileRoutes";
+import Database from '../config/database'; 
 import cookieParser from 'cookie-parser';
-import { createServer } from 'http'; // Import création serveur pour le multijoueurs
-import { Server } from 'socket.io'; // Import des sockets
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import Category from '../models/category.model';
 import Question from '../models/question.model';
 import Setting from '../models/setting.model';
