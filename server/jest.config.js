@@ -2,6 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  setupFiles: ['dotenv/config'], // Force Jest à lire le .env
   // On indique où se trouvent les tests
   roots: ['<rootDir>/src'], 
   // On active le rapport de couverture
