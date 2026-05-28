@@ -4,10 +4,7 @@ import authentificationRoutes from "../routes/auth.routes";
 import questionRoutes from "../routes/question.routes";
 import scoreRoutes from "../routes/score.routes";
 import categoryRoutes from "../routes/category.routes"; 
-import { requestLogger } from "../middlewares/logger";
 import { errorHandler } from "../middlewares/errorHandler";
-import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from '../config/swagger';
 import cors from 'cors';
 import Database from '../config/database'; 
 import cookieParser from 'cookie-parser';
@@ -24,8 +21,6 @@ const port = 3000;
 
 const sequelize = Database.getInstance();
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
 app.use(express.json());
 
 app.use(cookieParser());
@@ -33,8 +28,6 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use(express.static('public')); 
-
-app.use(requestLogger); 
 
 app.get('/', (req: Request, res: Response) => {
     res.send("Bienvenue sur mon serveur API.");
@@ -54,14 +47,6 @@ app.get('/api/hello/:name', (req: Request, res: Response) => {
     res.json({"message": `Bonjour ${req.params.name}`, "timestamp": new Date().toISOString()});
 });
 
-// Mise en place du routeur, avec toutes les routes de userRoutes qui utilisent '/api/users'
-app.use('/api/users', userRoutes);
-// Ajoute du routeur, avec toutes les routes de adminRoutes qui utilisent '/api/admin/basic'
-app.use(adminRoutes);
-// Mise en pause de l'ancienne route
-// app.use(authRoutes);
-app.use(profileRoutes);
-// NOUVEAU : Utilisations des nouvelles routes pour le quiz
 app.use('/api/auth', authentificationRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/scores', scoreRoutes);
@@ -427,3 +412,5 @@ io.on("connection", (Socket) => {
 const PORT = process.env.PORT || 3000;
 
 startApp();
+
+export { app, io, httpServer };
