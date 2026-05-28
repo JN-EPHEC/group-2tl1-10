@@ -29,4 +29,4 @@ Setting.belongsTo(Question, { foreignKey: 'questionId' });
 User.hasMany(Category, { foreignKey: 'userId', as: 'categories' });
 Category.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-export { User, Category, Question, GameSession, PlayerAnswer };
+export { User, Category, Question, GameSession, PlayerAnswer, Setting };
