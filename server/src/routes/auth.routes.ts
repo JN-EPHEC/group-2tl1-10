@@ -2,12 +2,13 @@ import { Router } from 'express';
 // Importation de tous les fonctions du contrôleur sur l'alias authController
 import * as authController from '../controllers/auth.controller';
 import { verifyToken } from '../middlewares/auth.middleware';
+import { loginLimiter } from '../middlewares/rateLimiter';
 
 const router = Router(); 
 
 // Définition des routes d'authentification 
 router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/login', loginLimiter, authController.login);
 router.post('/refresh', authController.refreshToken);
 
 // Route protégé 
