@@ -27,7 +27,7 @@
           <div 
             v-for="(ans, i) in currentQ.answers" :key="i" 
             class="border-4 border-black p-6 text-2xl font-bold text-center shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-colors"
-            :class="(screen === 'results' && ans === correctAnswer) ? 'bg-green-400 text-black border-8' : 'bg-white'"
+            :class="(screen === 'results' && isAnswerCorrect(ans)) ? 'bg-green-400 text-black border-8' : 'bg-white'"
           >
             {{ ans }}
           </div>
@@ -143,7 +143,7 @@ const timer = ref(15)
 const confusedCount = ref(0)
 const roomCode = route.params.roomCode as string
 const screen = ref('playing') 
-const correctAnswer = ref('')
+const correctAnswer = ref<any>([]) // Peut être un tableau ou une string
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
 
@@ -156,6 +156,14 @@ const playSound = (soundName: string) => {
   });
 }
 
+// Fonction pour évaluer si l'affichage doit être vert
+const isAnswerCorrect = (ans: string) => {
+  if (Array.isArray(correctAnswer.value)) {
+    return correctAnswer.value.includes(ans);
+  }
+  return correctAnswer.value === ans;
+}
+
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
@@ -163,7 +171,8 @@ onMounted(() => {
   })
 
   socket.on('results_revealed', (data: any) => {
-    correctAnswer.value = data.correctAnswer
+    // On sécurise la récupération
+    correctAnswer.value = data.correctAnswers || data.correctAnswer || [];
     leaderboard.value = data.leaderboard
     screen.value = 'results' 
   })

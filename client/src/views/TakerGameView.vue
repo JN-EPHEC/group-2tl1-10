@@ -5,9 +5,10 @@
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full mb-8">
         <button 
-          v-for="(ans, i) in answers" :key="i" 
+          v-for="(ans, i) in answers" :key="ans + i" 
           @click="submitAnswer(ans)"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all break-words"
+          @mouseenter="jumpButton"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-transform duration-200 break-words"
         >
           {{ ans }}
         </button>
@@ -93,16 +94,37 @@ const myAnswer = ref('')
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
 
+// Fonction vitale pour transformer les paramètres "faux" du backend en vrais booléens
+const parseSettings = (rawSettings: any) => {
+  let parsed = rawSettings;
+  if (typeof rawSettings === 'string') {
+    try { parsed = JSON.parse(rawSettings); } catch(e) { parsed = {}; }
+  }
+  return {
+    rageQuit: parsed?.rageQuit === true || parsed?.rageQuit === 'true',
+    secretButton: parsed?.secretButton === true || parsed?.secretButton === 'true',
+    jumpingButtons: parsed?.jumpingButtons === true || parsed?.jumpingButtons === 'true',
+    enableSounds: parsed?.enableSounds !== false && parsed?.enableSounds !== 'false'
+  }
+}
+
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
-    currentSettings.value = data.settings || {} 
+    currentSettings.value = parseSettings(data.settings)
     screen.value = 'playing'
     hasConfused.value = false
   })
 
   socket.on('results_revealed', (data: any) => {
-    isCorrect.value = (myAnswer.value === data.correctAnswer)
+    // On sécurise la lecture de la bonne réponse (String OU Tableau)
+    const correctAns = data.correctAnswers || data.correctAnswer || [];
+    if (Array.isArray(correctAns)) {
+      isCorrect.value = correctAns.includes(myAnswer.value);
+    } else {
+      isCorrect.value = (myAnswer.value === correctAns);
+    }
+
     screen.value = 'results'
     if (isCorrect.value) {
       playSound('mlg-horns-sound-effect')
@@ -114,7 +136,7 @@ onMounted(() => {
   socket.on('next_question_ready', () => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
-      currentSettings.value = data.settings || {}
+      currentSettings.value = parseSettings(data.settings)
       screen.value = 'playing'
       hasAnswered.value = false 
       hasConfused.value = false
@@ -129,11 +151,20 @@ onMounted(() => {
 })
 
 const playSound = (soundName: string) => {
-  if (currentSettings.value?.enableSounds === false) return;
+  if (!currentSettings.value?.enableSounds) return;
   const audio = new Audio(`/sounds/${soundName}.mp3`);
   audio.play().catch(error => {
     console.warn("Le navigateur a bloqué l'audio :", error);
   });
+}
+
+// La fameuse mécanique du bouton fuyant
+const jumpButton = (e: Event) => {
+  if (!currentSettings.value?.jumpingButtons) return;
+  const target = e.target as HTMLElement;
+  const randomX = Math.floor(Math.random() * 200) - 100; // Entre -100px et +100px
+  const randomY = Math.floor(Math.random() * 200) - 100;
+  target.style.transform = `translate(${randomX}px, ${randomY}px)`;
 }
 
 const submitAnswer = (answerText: string) => {
