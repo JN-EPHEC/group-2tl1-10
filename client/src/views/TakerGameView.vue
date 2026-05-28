@@ -2,14 +2,19 @@
   <div class="min-h-screen flex items-center justify-center font-sans">
     
     <div v-if="screen === 'playing'" class="w-full max-w-2xl flex flex-col p-4">
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full mb-8 relative">
-        <button 
-          v-for="(ans, i) in answers" :key="ans + i" 
+        <button
+          v-for="(ans, i) in answers" :key="ans + i"
           @click="submitAnswer(ans)"
           @mouseenter="jumpButton(i)"
-          :style="{ top: `${jumpPositions[i]?.y || 0}px`, left: `${jumpPositions[i]?.x || 0}px`, position: 'relative' }"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10"
+          :disabled="hasNoCorrectAnswer"
+          :style="currentSettings?.jumpingButtons ? {
+            top: `${jumpPositions[i]?.y || 0}px`,
+            left: `${jumpPositions[i]?.x || 0}px`,
+            position: 'absolute'
+          } : {}"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ ans }}
         </button>
@@ -89,11 +94,12 @@ const router = useRouter()
 const hasAnswered = ref(false)
 const roomCode = route.params.roomCode as string
 const answers = ref([])
-const screen = ref('playing') 
+const screen = ref('playing')
 const isCorrect = ref(false)
-const myAnswer = ref('') 
+const myAnswer = ref('')
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
+const hasNoCorrectAnswer = ref(false)
 const jumpPositions = ref<{x: number, y: number}[]>([])
 
 // Analyse des paramètres du backend
@@ -114,6 +120,7 @@ onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
     currentSettings.value = parseSettings(data.settings)
+    hasNoCorrectAnswer.value = data.hasNoCorrectAnswer || false
     // On initialise les positions à 0 pour chaque bouton
     jumpPositions.value = data.answers.map(() => ({x: 0, y: 0}))
     screen.value = 'playing'
@@ -143,13 +150,19 @@ onMounted(() => {
     }
   })
 
+  socket.on('all_players_answered', () => {
+    // Tous les joueurs ont répondu, les résultats vont s'afficher
+    screen.value = 'waiting'
+  })
+
   socket.on('next_question_ready', () => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
       currentSettings.value = parseSettings(data.settings)
+      hasNoCorrectAnswer.value = data.hasNoCorrectAnswer || false
       jumpPositions.value = data.answers.map(() => ({x: 0, y: 0}))
       screen.value = 'playing'
-      hasAnswered.value = false 
+      hasAnswered.value = false
       hasConfused.value = false
       myAnswer.value = ''
     })

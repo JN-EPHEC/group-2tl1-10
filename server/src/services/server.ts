@@ -215,6 +215,15 @@ io.on("connection", (Socket) => {
         // Si la question n'existe plus, on arrête tout !
         if (!q) return;
 
+        // Vérifier s'il y a une bonne réponse définie
+        let correctAnswers: string[] = [];
+        if (Array.isArray(q.correctAnswers)) {
+            correctAnswers = q.correctAnswers;
+        } else if (typeof q.correctAnswer === 'string') {
+            try { correctAnswers = JSON.parse(q.correctAnswer); }
+            catch { correctAnswers = q.correctAnswer ? [q.correctAnswer] : []; }
+        }
+
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
             text: q.title,
@@ -222,7 +231,8 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: 15
+            timeLimit: 15,
+            hasNoCorrectAnswer: correctAnswers.length === 0
         });
     });
 
@@ -243,6 +253,15 @@ io.on("connection", (Socket) => {
             providedAnswer: answer,
             timeSpent: timeSpent
         };
+
+        // Vérifier si tous les joueurs ont répondu
+        const allAnswered = game.players.every(p =>
+            game.responses[game.currentQuestionIndex][p.id] !== undefined
+        );
+
+        if (allAnswered) {
+            io.to(roomCode).emit("all_players_answered");
+        }
     });
 
     // Le créateur révèle la réponse
@@ -255,7 +274,7 @@ io.on("connection", (Socket) => {
         // On transforme la chaîne en tableau
         let correctAnswers: string[] = [];
         if (Array.isArray(currentQ.correctAnswers)) {
-            correctAnswers = currentQ.correctAnswer;
+            correctAnswers = currentQ.correctAnswers;
         } else if (typeof currentQ.correctAnswer === 'string') {
             try { correctAnswers = JSON.parse(currentQ.correctAnswer); }
             catch { correctAnswers = currentQ.correctAnswer ? [currentQ.correctAnswer] : []; }
