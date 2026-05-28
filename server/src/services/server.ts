@@ -405,7 +405,27 @@ io.on("connection", (Socket) => {
 
     Socket.on("disconnect", () => {
         console.log(`Déconnexion : ${Socket.id}`);
-        // TODO plus tard : Gérer la déconnexion d'un joueur ou du créateur
+        
+        // Nettoyer les parties où ce joueur était impliqué
+        for (const roomCode in activeGames) {
+            const game = activeGames[roomCode];
+            
+            // Vérifier si c'est le créateur qui se déconnecte
+            if (game.hostId === Socket.id) {
+                console.log(`Créateur déconnecté de la partie ${roomCode}`);
+                // Notifier les autres joueurs
+                io.to(roomCode).emit("host_disconnected");
+                // Supprimer la partie
+                delete activeGames[roomCode];
+            } else {
+                // Vérifier si c'est un joueur normal
+                game.players = game.players.filter((p: any) => p.id !== Socket.id);
+                if (game.players.length === 0 && game.hostId !== Socket.id) {
+                    console.log(`Partie ${roomCode} vide, suppression`);
+                    delete activeGames[roomCode];
+                }
+            }
+        }
     })
 });
 

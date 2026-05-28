@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -171,6 +171,13 @@ onMounted(() => {
     alert("Le quiz est terminé ! Tu peux retourner à l'accueil.")
     router.push('/')
   })
+})
+
+onUnmounted(() => {
+  socket.off('results_revealed')
+  socket.off('all_players_answered')
+  socket.off('next_question_ready')
+  socket.off('game_over')
 })
 
 const playSound = (soundName: string) => {

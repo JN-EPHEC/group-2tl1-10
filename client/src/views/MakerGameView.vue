@@ -132,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -210,6 +210,16 @@ onMounted(() => {
   socket.on('game_over', () => {
     alert("C'est la fin du Quiz ! Admirez le classement final.")
   })
+})
+
+onUnmounted(() => {
+  clearInterval(timerInterval)
+  socket.off('all_players_answered')
+  socket.off('results_revealed')
+  socket.off('next_question_ready')
+  socket.off('update_confused')
+  socket.off('activate_rickroll')
+  socket.off('game_over')
 })
 
 const startTimer = () => {
