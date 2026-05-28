@@ -7,13 +7,21 @@ jobs:
         runs-on: ubuntu-latest # Runner
         steps:
             - uses: actions/checkout@v3 # Actions
+            
             - name: Set up Node.js
               uses: actions/setup-node@v3
               with:
                 node-version: '18.x'
+                
             - name: Install dependencies
               run: npm install
               working-directory: ./server
-            - name: Run unit tests
-              run: npm test
-              working-directory: ./server # Execute les tests unitaires
+              
+            - name: Run unit tests with coverage
+              run: npm run test:coverage # On utilise notre commande magique
+              working-directory: ./server
+              env: # On donne à GitHub des fausses clés pour passer tes sécurités
+                DATABASE_URL: postgres://dummy:dummy@localhost:5432/dummy
+                JWT_SECRET: secret_ci_jwt
+                REFRESH_SECRET: secret_ci_refresh
+                PORT: 3000

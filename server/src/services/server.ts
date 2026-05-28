@@ -1,22 +1,15 @@
 import 'dotenv/config';
 import express, { response, type Application, type Request, type Response} from 'express'; 
-import userRoutes from "../routes/userRoutes"; // Importation de la route user
-import adminRoutes from "../routes/adminRoutes"; // Importation de la route admin
-import authentificationRoutes from "../routes/auth.routes"; // NOUVEAU : Importation de la route authentification pour le quiz
-import questionRoutes from "../routes/question.routes"; // NOUVEAU : Importation de la route des questions pour le quiz
-import scoreRoutes from "../routes/score.routes"; // NOUVEAU : Importation de la route pour le score des quizs
-import categoryRoutes from "../routes/category.routes"; // Importation de la route pour les categories 
-import { requestLogger } from "../middlewares/logger";
+import authentificationRoutes from "../routes/auth.routes";
+import questionRoutes from "../routes/question.routes";
+import scoreRoutes from "../routes/score.routes";
+import categoryRoutes from "../routes/category.routes"; 
 import { errorHandler } from "../middlewares/errorHandler";
-import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from '../config/swagger';
 import cors from 'cors';
-import Database from '../config/database'; // Import de la classe
-import authRoutes from "../routes/authRoutes";
-import profileRoutes from "../routes/profileRoutes";
+import Database from '../config/database'; 
 import cookieParser from 'cookie-parser';
-import { createServer } from 'http'; // Import création serveur pour le multijoueurs
-import { Server } from 'socket.io'; // Import des sockets
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import Category from '../models/category.model';
 import Question from '../models/question.model';
 import Setting from '../models/setting.model';
@@ -28,8 +21,6 @@ const port = 3000;
 
 const sequelize = Database.getInstance();
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
 app.use(express.json());
 
 app.use(cookieParser());
@@ -37,8 +28,6 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use(express.static('public')); 
-
-app.use(requestLogger); 
 
 app.get('/', (req: Request, res: Response) => {
     res.send("Bienvenue sur mon serveur API.");
@@ -58,14 +47,6 @@ app.get('/api/hello/:name', (req: Request, res: Response) => {
     res.json({"message": `Bonjour ${req.params.name}`, "timestamp": new Date().toISOString()});
 });
 
-// Mise en place du routeur, avec toutes les routes de userRoutes qui utilisent '/api/users'
-app.use('/api/users', userRoutes);
-// Ajoute du routeur, avec toutes les routes de adminRoutes qui utilisent '/api/admin/basic'
-app.use(adminRoutes);
-// Mise en pause de l'ancienne route
-// app.use(authRoutes);
-app.use(profileRoutes);
-// NOUVEAU : Utilisations des nouvelles routes pour le quiz
 app.use('/api/auth', authentificationRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/scores', scoreRoutes);
@@ -74,16 +55,12 @@ app.use('/api/categories', categoryRoutes);
 async function startApp() {
     try {
         await sequelize.authenticate();
-        console.log('Connexion à SQLite établie');
-        await sequelize.sync({ alter: true });
-        console.log("Synchronisation terminé");
-
-        // Changement pour httpServer.listen() pour lancer le serveur http
+        console.log('Connexion à la base de données PostgreSQL établie avec succès.');
         httpServer.listen(PORT, '0.0.0.0', () => {
             console.log(`Serveur prêt sur le port ${PORT}`);
         });
     } catch (error) {
-        console.error('Erreur de connexion avec SQlite:', error);
+        console.error('Erreur critique de connexion avec la base de données :', error);
     }
 };
 
@@ -435,3 +412,5 @@ io.on("connection", (Socket) => {
 const PORT = process.env.PORT || 3000;
 
 startApp();
+
+export { app, io, httpServer };

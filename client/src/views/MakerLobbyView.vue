@@ -65,8 +65,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { socket } from '../services/socket';
-import { computed } from 'vue';
-import QrcodeVue from 'qrcode.vue'; 
+// import { computed } from 'vue';
+// import QrcodeVue from 'qrcode.vue'; 
 
 const route = useRoute()
 const router = useRouter()
