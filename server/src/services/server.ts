@@ -171,13 +171,20 @@ io.on("connection", (Socket) => {
                 return;
             }
 
+            // Garder seulement les joueurs actuellement connectés
+            const connectedPlayers = game.players.filter((p: any) => {
+                const socket = io.sockets.sockets.get(p.id);
+                return socket !== undefined;
+            });
+            game.players = connectedPlayers;
+
             // On prépare la partie
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
             game.confusedCount = 0;
             game.status = 'playing';
 
-            game.scores = {}; 
+            game.scores = {};
             game.responses = {};
             game.sessionIds = {};
             game.questionStartTime = Date.now();
@@ -215,8 +222,14 @@ io.on("connection", (Socket) => {
         // Si la question n'existe plus, on arrête tout !
         if (!q) return;
 
-        // On récupère la vlauer personalisée, sinon 15 secondes par défaut
-        const chosenTimeLimit = q.settings?.timeLimit || 15;
+        // Vérifier s'il y a une bonne réponse définie
+        let correctAnswers: string[] = [];
+        if (Array.isArray(q.correctAnswers)) {
+            correctAnswers = q.correctAnswers;
+        } else if (typeof q.correctAnswer === 'string') {
+            try { correctAnswers = JSON.parse(q.correctAnswer); }
+            catch { correctAnswers = q.correctAnswer ? [q.correctAnswer] : []; }
+        }
 
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
@@ -225,7 +238,8 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: chosenTimeLimit
+            timeLimit: 15,
+            hasNoCorrectAnswer: correctAnswers.length === 0
         });
     });
 
@@ -247,12 +261,13 @@ io.on("connection", (Socket) => {
             timeSpent: timeSpent
         };
 
-        // On compte combien de joueurs ont répondu à cette question
-        const responseCount = Object.keys(game.responses[game.currentQuestionIndex]).length;
+        // Vérifier si tous les joueurs ont répondu
+        const allAnswered = game.players.every(p =>
+            game.responses[game.currentQuestionIndex][p.id] !== undefined
+        );
 
-        // Si tout le monde a répondu, on prévient l'écran du Créateur
-        if (responseCount >= game.players.length) {
-            io.to(game.hostId).emit("all_players_answered");
+        if (allAnswered) {
+            io.to(roomCode).emit("all_players_answered");
         }
     });
 
@@ -266,7 +281,7 @@ io.on("connection", (Socket) => {
         // On transforme la chaîne en tableau
         let correctAnswers: string[] = [];
         if (Array.isArray(currentQ.correctAnswers)) {
-            correctAnswers = currentQ.correctAnswer;
+            correctAnswers = currentQ.correctAnswers;
         } else if (typeof currentQ.correctAnswer === 'string') {
             try { correctAnswers = JSON.parse(currentQ.correctAnswer); }
             catch { correctAnswers = currentQ.correctAnswer ? [currentQ.correctAnswer] : []; }
@@ -392,37 +407,25 @@ io.on("connection", (Socket) => {
     });
 
     Socket.on("disconnect", () => {
-        console.log(`Déconnexion d'un utilisateur : ${Socket.id}`);
+        console.log(`Déconnexion : ${Socket.id}`);
         
-        // On cherche dans toutes les parties si le socket appartient à quelqu'un
+        // Nettoyer les parties où ce joueur était impliqué
         for (const roomCode in activeGames) {
             const game = activeGames[roomCode];
-
-            // CAS 1 : Si le Créateur qui s'est déconnecté (Rage quit, perte de co...)
+            
+            // Vérifier si c'est le créateur qui se déconnecte
             if (game.hostId === Socket.id) {
-                console.log(`Le créateur de la room ${roomCode} est parti. Destruction de la salle`);
-                io.to(roomCode).emit("host_disconnected"); // On annonce la déconnexion
+                console.log(`Créateur déconnecté de la partie ${roomCode}`);
+                // Notifier les autres joueurs
+                io.to(roomCode).emit("host_disconnected");
+                // Supprimer la partie
                 delete activeGames[roomCode];
-                break; 
-            }
-            // CAS 2 : C'est un joueur qui s'est déconnecté
-            else {
-                const playerIndex = game.players.findIndex((p: any) => p.id === Socket.id);
-
-                if (playerIndex !== -1) {
-                    console.log(`Un joueur a quitté la room ${roomCode}`);
-                    // On le supprime du tableau des joueurs
-                    game.players.splice(playerIndex, 1)
-
-                    // SECRUITE AUTO-REVELATION :
-                    // On vérifie si tout le monde à répondu
-                    const currentResponses = game.responses[game.currentQuestionIndex] || {};
-                    const responseCount = Object.keys(currentResponses).length;
-
-                    // S'il rest des joueurs et qu'ils ont tous répondu, on déclenche la révélation
-                    if (game.players.length > 0 && responseCount >= game.players.length) {
-                        io.to(game.hostId).emit("all_players_answered");
-                    }
+            } else {
+                // Vérifier si c'est un joueur normal
+                game.players = game.players.filter((p: any) => p.id !== Socket.id);
+                if (game.players.length === 0 && game.hostId !== Socket.id) {
+                    console.log(`Partie ${roomCode} vide, suppression`);
+                    delete activeGames[roomCode];
                 }
             }
         }

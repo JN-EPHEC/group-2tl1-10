@@ -9,6 +9,7 @@ const Question = sequelize.define('Question', {
     title: { type: DataTypes.STRING, allowNull: false },
     possibleAnswers: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false },
     correctAnswer: { type: DataTypes.STRING, allowNull: true },
+    correctAnswers: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
     difficulty: { type: DataTypes.INTEGER, defaultValue: 1 },
     categoryId: {
         type: DataTypes.INTEGER,

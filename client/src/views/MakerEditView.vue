@@ -1,123 +1,217 @@
 <template>
-  <div class="edit-wrapper">
-    <div class="main-container">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    <div class="w-full max-w-4xl bg-white border-4 border-black p-6 md:p-12 relative flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
 
-      <!-- ÉCRAN 1 : L'ÉDITEUR DU QUIZ -->
-      <div v-if="currentScreen === 'quiz'" class="screen-quiz">
+      <div v-if="currentScreen === 'quiz'" class="w-full flex flex-col items-center">
+        
+        <div class="w-full flex justify-start mb-8">
+          <button 
+            @click="goBack"
+            class="px-4 py-2 font-bold bg-white border-4 border-black hover:bg-gray-200 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+          >
+            👈 Back to Dashboard
+          </button>
+        </div>
 
-        <!-- Bouton de retour -->
-        <button class="fraud-btn" @click="goBack" style="margin-bottom: 2rem;">
-          👈 Back to Maker Dashboard
-        </button>
+        <input 
+          type="text" 
+          v-model="quizDraft.name" 
+          class="w-full max-w-lg p-4 mb-10 text-2xl md:text-3xl font-black font-mono text-center border-4 border-dashed border-black outline-none bg-transparent focus:bg-yellow-200 transition-colors placeholder-gray-300" 
+          placeholder="[ ENTER QUIZ NAME ]" 
+        />
 
-        <input type="text" v-model="quizDraft.name" class="dashed-input title-input" placeholder="Quiz name" />
-
-        <div class="questions-list">
-          <div v-for="(q, index) in quizDraft.questions" :key="q.id" class="item-row">
-            <!-- On clique sur le texte pour éditer la question -->
-            <div class="clickable-text" @click="openQuestion(index)">
-              Question {{ index + 1 }} : {{ q.text || '...' }}
+        <div class="w-full flex flex-col gap-4 mb-10">
+          <div 
+            v-for="(q, index) in quizDraft.questions" :key="q.id" 
+            class="w-full border-4 border-black p-4 bg-white flex flex-col md:flex-row justify-between items-center shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all gap-4"
+          >
+            <div 
+              class="flex-1 font-bold text-xl cursor-pointer hover:text-blue-600 hover:underline break-words w-full"
+              @click="openQuestion(index)"
+            >
+              <span class="bg-black text-white px-2 py-1 mr-2 font-mono">Q{{ index + 1 }}</span> 
+              {{ q.text || '...' }}
             </div>
-            <button class="delete-btn" @click="deleteQuestion(index)">delete</button>
+            <button 
+              @click="deleteQuestion(index)"
+              class="px-4 py-2 font-bold text-white bg-red-500 border-4 border-black hover:bg-red-600 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+            >
+              delete
+            </button>
           </div>
         </div>
 
-        <button class="action-btn" @click="addQuestion">add question</button>
-        <button class="save-btn" @click="saveQuizToBackend">Save Quiz</button>
+        <div class="flex flex-col md:flex-row gap-6 w-full justify-center">
+          <button 
+            @click="addQuestion"
+            class="px-8 py-4 text-xl font-bold bg-cyan-300 border-4 border-black hover:bg-cyan-400 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
+          >
+            + Add Question
+          </button>
+          <button 
+            @click="saveQuizToBackend"
+            class="px-8 py-4 text-xl font-bold bg-green-400 border-4 border-black hover:bg-green-500 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
+          >
+            💾 Save Quiz
+          </button>
+        </div>
       </div>
 
-      <!-- ÉCRAN 2 : L'ÉDITEUR DE QUESTION -->
-      <div v-else-if="currentScreen === 'question' && activeQ !== null" class="screen-question">
-        <div class="header-box">Question {{ activeQuestionIndex + 1 }}</div>
+      <div v-else-if="currentScreen === 'question' && activeQ !== null" class="w-full flex flex-col items-center">
         
-        <input type="text" v-model="activeQ.text" class="dashed-input w-full" placeholder="Question text" />
+        <div class="text-2xl font-black font-mono bg-black text-white px-6 py-2 mb-8 transform -rotate-1">
+          QUESTION {{ activeQuestionIndex + 1 }}
+        </div>
+        
+        <input 
+          type="text" 
+          v-model="activeQ.text" 
+          class="w-full p-4 mb-8 text-xl font-bold font-mono border-4 border-black outline-none bg-pink-100 focus:bg-pink-200 transition-colors shadow-[4px_4px_0px_rgba(0,0,0,1)] placeholder-gray-400" 
+          placeholder="Type your question here..." 
+        />
 
-        <div class="answers-list">
-          <div v-for="(ans, aIndex) in activeQ.answers" :key="aIndex" class="answer-row">
-            <!-- Toggle Switch Maison (Vert = vrai, Rouge = faux) -->
+        <div class="w-full flex flex-col gap-4 mb-8">
+          <div 
+            v-for="(ans, aIndex) in activeQ.answers" :key="aIndex" 
+            class="w-full flex flex-col md:flex-row items-center gap-4 border-4 border-black p-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+          >
             <div 
-              class="toggle-switch" 
-              :class="{ 'is-correct': ans.isCorrect }"
               @click="ans.isCorrect = !ans.isCorrect"
+              class="w-16 h-8 border-4 border-black relative cursor-pointer transition-colors shrink-0"
+              :class="ans.isCorrect ? 'bg-green-400' : 'bg-red-400'"
             >
-              <div class="toggle-knob"></div>
+              <div 
+                class="w-6 h-6 bg-white border-4 border-black absolute top-0 left-0 transition-transform"
+                :class="ans.isCorrect ? 'translate-x-8' : 'translate-x-0'"
+              ></div>
             </div>
             
-            <input type="text" v-model="ans.text" class="dashed-input flex-1" placeholder="answer text" />
-            <button class="delete-btn" @click="deleteAnswer(aIndex)">delete</button>
+            <input 
+              type="text" 
+              v-model="ans.text" 
+              class="flex-1 w-full p-2 font-mono border-4 border-dashed border-gray-400 focus:border-black outline-none bg-transparent" 
+              placeholder="answer text" 
+            />
+            
+            <button 
+              @click="deleteAnswer(aIndex)"
+              class="px-3 py-2 font-bold text-white bg-red-500 border-4 border-black hover:bg-red-600 active:translate-y-1 active:translate-x-1 transition-transform"
+            >
+              X
+            </button>
           </div>
         </div>
 
-        <div class="bottom-controls">
-          <input type="number" v-model="activeQ.timeLimit" class="dashed-input time-input" placeholder="time limit" />
-          <div class="center-buttons">
-            <button class="action-btn" @click="addAnswer">add answer</button>
-            <button class="save-btn" @click="currentScreen = 'quiz'">Save (back)</button>
+        <div class="w-full flex flex-col md:flex-row justify-between items-center gap-6 mt-4 pt-8 border-t-4 border-black">
+          <button 
+            @click="currentScreen = 'settings'"
+            class="px-6 py-3 font-bold bg-purple-300 border-4 border-black hover:bg-purple-400 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all w-full md:w-auto"
+          >
+            ⚙️ Settings
+          </button>
+          
+          <div class="flex gap-4 w-full md:w-auto justify-center">
+            <button 
+              @click="addAnswer"
+              class="px-6 py-3 font-bold bg-cyan-300 border-4 border-black hover:bg-cyan-400 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+            >
+              + Answer
+            </button>
+            <button 
+              @click="currentScreen = 'quiz'"
+              class="px-6 py-3 font-bold bg-yellow-300 border-4 border-black hover:bg-yellow-400 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+            >
+              Ok (Back)
+            </button>
           </div>
-          <button class="settings-btn" @click="currentScreen = 'settings'">settings</button>
         </div>
       </div>
 
-      <!-- ÉCRAN 3 : LES PARAMÈTRES WTF -->
-      <div v-else-if="currentScreen === 'settings' && activeQ !== null" class="screen-settings">
-        <div class="header-box">Question {{ activeQuestionIndex + 1 }}</div>
-        <div class="question-display">{{ activeQ.text || '...' }}</div>
-
-        <div class="settings-box">
-          <!-- Toggles WTF -->
-          <div class="setting-row">
-            <div class="toggle-switch"
-                 :class="{ 'is-correct': activeQ.settings.enableSounds !== false }"
-                 @click="activeQ.settings.enableSounds = activeQ.settings.enableSounds === false ? true : false">
-              <div class="toggle-knob"></div>
-            </div>
-            <span>enable absurd sound 🔊</span>
-          </div>
-          
-          <div class="setting-row">
-            <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.rageQuit }" @click="activeQ.settings.rageQuit = !activeQ.settings.rageQuit">
-              <div class="toggle-knob"></div>
-            </div>
-            <span>enable rage quit</span>
-          </div>
-
-          <div class="setting-row">
-            <div class="toggle-switch" :class="{ 'is-correct': activeQ.settings.secretButton }" @click="activeQ.settings.secretButton = !activeQ.settings.secretButton">
-              <div class="toggle-knob"></div>
-            </div>
-            <span>enable secret button</span>
-          </div>
-
-          <div class="setting-row">
-            <div class="toggle-switch"
-                 :class="{ 'is-correct': activeQ.settings.jumpingButtons }"
-                 @click="activeQ.settings.jumpingButtons = ! activeQ.settings.jumpingButtons">
-                <div class="toggle-knob"></div>
-              </div>
-              <span>enable jumping buttons</span>
-          </div>
-
-          <!-- Multiplicateur et Sons -->
-          <div class="setting-row">
-            <input type="number" v-model="activeQ.settings.scoreMultiplier" class="dashed-input tiny-input" />
-            <span>score multiplier</span>
-          </div>
-
-          <div class="setting-row">
-            <input type="number"
-                   v-model.number="activeQ.settings.timeLimit"
-                   class="dashed-input tiny-input"
-                   placeholder="15" />
-            <span>time limit (seconds)</span>
-          </div>
-
-          <div class="setting-row" v-for="sound in ['win', 'firstWin', 'lose', 'firstLose']" :key="sound">
-            <input type="text" v-model="activeQ.settings[`${sound}Sound`]" class="dashed-input small-input" placeholder="sound.mp3" />
-            <span>{{ sound }} sound</span>
-          </div>
+      <div v-else-if="currentScreen === 'settings' && activeQ !== null" class="w-full flex flex-col items-center">
+        
+        <div class="text-2xl font-black font-mono bg-purple-300 border-4 border-black px-6 py-2 mb-6">
+          SETTINGS Q{{ activeQuestionIndex + 1 }}
+        </div>
+        
+        <div class="w-full text-center text-lg font-bold font-mono border-4 border-dashed border-black p-4 mb-8 bg-gray-50">
+          "{{ activeQ.text || '...' }}"
         </div>
 
-        <button class="save-btn" @click="currentScreen = 'question'">Save (back)</button>
+        <div class="w-full max-w-lg border-4 border-black p-6 bg-white shadow-[8px_8px_0px_rgba(0,0,0,1)] flex flex-col gap-6 mb-12">
+          
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Absurd Sound 🔊</span>
+            <div 
+              @click="activeQ.settings.enableSounds = !activeQ.settings.enableSounds"
+              class="w-16 h-8 border-4 border-black relative cursor-pointer transition-colors shrink-0"
+              :class="activeQ.settings.enableSounds ? 'bg-green-400' : 'bg-red-400'"
+            >
+              <div class="w-6 h-6 bg-white border-4 border-black absolute top-0 left-0 transition-transform" :class="activeQ.settings.enableSounds ? 'translate-x-8' : 'translate-x-0'"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Jumping Buttons</span>
+            <div 
+              @click="activeQ.settings.jumpingButtons = !activeQ.settings.jumpingButtons"
+              class="w-16 h-8 border-4 border-black relative cursor-pointer transition-colors shrink-0"
+              :class="activeQ.settings.jumpingButtons ? 'bg-green-400' : 'bg-red-400'"
+            >
+              <div class="w-6 h-6 bg-white border-4 border-black absolute top-0 left-0 transition-transform" :class="activeQ.settings.jumpingButtons ? 'translate-x-8' : 'translate-x-0'"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Enable Rage Quit</span>
+            <div 
+              @click="activeQ.settings.rageQuit = !activeQ.settings.rageQuit"
+              class="w-16 h-8 border-4 border-black relative cursor-pointer transition-colors shrink-0"
+              :class="activeQ.settings.rageQuit ? 'bg-green-400' : 'bg-red-400'"
+            >
+              <div class="w-6 h-6 bg-white border-4 border-black absolute top-0 left-0 transition-transform" :class="activeQ.settings.rageQuit ? 'translate-x-8' : 'translate-x-0'"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Enable Secret Button</span>
+            <div 
+              @click="activeQ.settings.secretButton = !activeQ.settings.secretButton"
+              class="w-16 h-8 border-4 border-black relative cursor-pointer transition-colors shrink-0"
+              :class="activeQ.settings.secretButton ? 'bg-green-400' : 'bg-red-400'"
+            >
+              <div class="w-6 h-6 bg-white border-4 border-black absolute top-0 left-0 transition-transform" :class="activeQ.settings.secretButton ? 'translate-x-8' : 'translate-x-0'"></div>
+            </div>
+          </div>
+
+          <div class="border-t-4 border-black my-2"></div>
+
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Score Multiplier</span>
+            <input 
+              type="number" 
+              v-model="activeQ.settings.scoreMultiplier" 
+              class="w-20 p-2 font-mono border-4 border-black outline-none text-center bg-yellow-100 focus:bg-yellow-200" 
+            />
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg font-mono">Time Limit (s)</span>
+            <input 
+              type="number" 
+              v-model="activeQ.timeLimit" 
+              class="w-20 p-2 font-mono border-4 border-black outline-none text-center bg-cyan-100 focus:bg-cyan-200" 
+            />
+          </div>
+
+        </div>
+
+        <button 
+          @click="currentScreen = 'question'"
+          class="px-10 py-4 text-xl font-bold bg-yellow-300 border-4 border-black hover:bg-yellow-400 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
+        >
+          Save Settings (Back)
+        </button>
+
       </div>
 
     </div>
@@ -135,12 +229,11 @@ const authStore = useAuthStore()
 const hasUnsavedChanges = ref(true)
 
 const quizDraft = ref ({
-  id: null as number | null, // Ajout de l'ID au brouillon pour savoir si c'est une édition
+  id: null as number | null,
   name: '',
   questions: [] as any[]
 })
 
-// Chargment des formulaires avec les données du quiz en édition 
 onMounted(async () => {
   const quizId = route.params.id
 
@@ -153,34 +246,42 @@ onMounted(async () => {
       if (response.ok) {
         const data = await response.json()
 
-        // On rempli le nom et l'ID
         quizDraft.value.id = data.id
         quizDraft.value.name = data.name
 
-        // On traduit les questions du Backend vers le Frontend
         if (data.questions) {
           quizDraft.value.questions = data.questions.map((q: any) => {
+            // Gérer les réponses correctes (peuvent être une string, un JSON string, ou un array)
+            let correctAnswers: string[] = [];
+            if (Array.isArray(q.correctAnswers)) {
+              correctAnswers = q.correctAnswers;
+            } else if (typeof q.correctAnswer === 'string' && q.correctAnswer) {
+              try {
+                const parsed = JSON.parse(q.correctAnswer);
+                correctAnswers = Array.isArray(parsed) ? parsed : [parsed];
+              } catch {
+                correctAnswers = [q.correctAnswer];
+              }
+            }
+
             return {
               id: q.id,
               text: q.title,
-              timeLimit: q.difficulty, // En attendant d'avoir un vrai timeLimit en base
-
-              // On reconstruit le tableau de réponse : 
+              timeLimit: q.difficulty,
               answers: q.possibleAnswers.map((ansText: string) => ({
                 text: ansText,
-                isCorrect: ansText === q.correctAnswer // C'est la bonne si le texte correspond
+                isCorrect: correctAnswers.includes(ansText)
               })),
-
-              // On récupère les paramètres ou on met des valeurs par défaut 
               settings: q.settings || {
-                rageQuit: false, secretBouton: false, scoreMultiplier: 1,
-                winSound: '', firstWinSound: '', loseSound: '', firstLoseSound: ''
+                enableSounds: false,
+                jumpingButtons: false,
+                rageQuit: false,
+                secretButton: false,
+                scoreMultiplier: 1
               }
             }
           })
         }
-
-        // Comme on vient de charger les données, il n'y a pas encore de modifs non sauvegardées !
         hasUnsavedChanges.value = false
       }
     } catch(error) {
@@ -202,18 +303,14 @@ onBeforeRouteLeave((to, from) => {
   }
 })
 
-// --- GESTION DE L'AFFICHAGE ---
-// Permet de naviguer entre les 3 interfaces sans changer d'URL
 const currentScreen = ref<'quiz' | 'question' | 'settings'>('quiz')
 const activeQuestionIndex = ref<number>(0)
 
-// Raccourci pour accéder facilement à la question en cours d'édition
 const activeQ = computed(() => quizDraft.value.questions[activeQuestionIndex.value])
 
-// --- ACTIONS QUIZ ---
 const addQuestion = () => {
   quizDraft.value.questions.push({
-    id: Date.now(), // ID temporaire
+    id: Date.now(),
     text: '',
     timeLimit: 10,
     answers: [
@@ -221,13 +318,11 @@ const addQuestion = () => {
       { text: '', isCorrect: false }
     ],
     settings: {
+      enableSounds: false,
+      jumpingButtons: false,
       rageQuit: false,
       secretButton: false,
-      scoreMultiplier: 1,
-      winSound: 'default_win.mp3',
-      firstWinSound: 'default_win.mp3',
-      loseSound: 'default_lose.mp3',
-      firstLoseSound: 'default_lose.mp3'
+      scoreMultiplier: 1
     }
   })
 }
@@ -241,7 +336,6 @@ const openQuestion = (index: number) => {
   currentScreen.value = 'question'
 }
 
-// --- ACTIONS QUESTION ---
 const addAnswer = () => {
   activeQ.value.answers.push({ text: '', isCorrect: false })
 }
@@ -250,15 +344,12 @@ const deleteAnswer = (index: number) => {
   activeQ.value.answers.splice(index, 1)
 }
 
-// --- SAUVEGARDE FINALE ---
 const saveQuizToBackend = async () => {
-  // Petite vérification de sécurité absurde
   if (quizDraft.value.name === '' || quizDraft.value.questions.length === 0) {
     alert("Bruh... Tu ne peux pas sauvegarder un quiz sans nom et sans questions !")
     return;
   }
 
-  // On détermine si c'est une édition ou une création
   const isEditing = quizDraft.value.id !== null;
   const url = isEditing
     ? `/api/categories/${quizDraft.value.id}`
@@ -266,13 +357,13 @@ const saveQuizToBackend = async () => {
   const method = isEditing ? 'PUT' : 'POST'
 
   try {
-    const response = await fetch(url, { // A Remplacer par la bonne route de création du backend
+    const response = await fetch(url, {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}` // On prouve qu'on est le créateur !
+        'Authorization': `Bearer ${authStore.token}`
       },
-      body: JSON.stringify(quizDraft.value) // On envoie notre gros objet JSON
+      body: JSON.stringify(quizDraft.value)
     })
 
     if (response.ok) {
@@ -288,48 +379,3 @@ const saveQuizToBackend = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* MISE EN PAGE GLOBALE */
-.edit-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; font-family: sans-serif; }
-.main-container { border: 2px solid black; padding: 2rem; width: 800px; background-color: white; display: flex; flex-direction: column; align-items: center; }
-
-/* INPUTS POINTILLÉS */
-.dashed-input { border: 2px dashed black; padding: 0.8rem; font-size: 1.2rem; text-align: center; outline: none; }
-.title-input { width: 400px; margin-bottom: 2rem; }
-.w-full { width: 100%; box-sizing: border-box; margin-bottom: 2rem; }
-.time-input { width: 120px; }
-.tiny-input { width: 60px; padding: 0.2rem; }
-.small-input { width: 150px; padding: 0.2rem; }
-
-/* LISTES ET LIGNES */
-.questions-list, .answers-list { width: 100%; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
-.item-row, .answer-row { display: flex; border: 2px solid black; border-radius: 8px; padding: 0.5rem 1rem; align-items: center; gap: 1rem; }
-.clickable-text { flex: 1; cursor: pointer; font-size: 1.2rem; }
-.clickable-text:hover { text-decoration: underline; }
-.flex-1 { flex: 1; }
-
-/* BOUTONS */
-button { border: 2px solid black; border-radius: 8px; background-color: white; cursor: pointer; transition: 0.2s; }
-button:hover { background-color: #eee; }
-.delete-btn { padding: 0.5rem; border-radius: 4px; }
-.action-btn, .save-btn, .settings-btn { padding: 0.8rem 2rem; font-size: 1.2rem; }
-.action-btn { margin-bottom: 1rem; }
-.save-btn { border-radius: 4px; }
-
-/* CONTROLES DU BAS (Écran Question) */
-.bottom-controls { display: flex; width: 100%; justify-content: space-between; align-items: flex-end; }
-.center-buttons { display: flex; flex-direction: column; gap: 1rem; align-items: center; }
-
-/* DESIGN DES TOGGLE SWITCH (Faux/Vrai) */
-.toggle-switch { width: 50px; height: 26px; border: 2px solid black; border-radius: 13px; background-color: #ff4d4d; position: relative; cursor: pointer; transition: background-color 0.3s; }
-.toggle-knob { width: 20px; height: 20px; background-color: white; border: 2px solid black; border-radius: 50%; position: absolute; top: 1px; left: 1px; transition: transform 0.3s; }
-.toggle-switch.is-correct { background-color: #4CAF50; }
-.toggle-switch.is-correct .toggle-knob { transform: translateX(24px); }
-
-/* ÉCRAN SETTINGS */
-.header-box { border: 2px solid black; padding: 0.5rem 2rem; font-size: 1.2rem; margin-bottom: 1rem; }
-.question-display { border: 2px solid black; padding: 0.5rem 2rem; width: 100%; text-align: center; margin-bottom: 2rem; }
-.settings-box { border: 2px solid black; padding: 2rem; width: 80%; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
-.setting-row { display: flex; align-items: center; gap: 1rem; font-size: 1.2rem; }
-</style>

@@ -1,32 +1,52 @@
 <template>
-  <div class="list-wrapper">
-    <!-- Le grand cadre habituel -->
-    <div class="main-container">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 font-sans p-4">
+    
+    <div class="w-full max-w-4xl bg-white border-4 border-black p-8 md:p-16 flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
       
-      <h1 class="main-title">All your quizes</h1>
+      <h1 class="text-4xl md:text-5xl font-black mb-12 text-center uppercase tracking-tight">
+        All your quizes
+      </h1>
 
-      <!-- La zone de la liste -->
-      <div class="quizzes-container">
-        <!-- Message si aucun quiz -->
-        <p v-if="quizzes.length === 0" class="empty-msg">
+      <div class="w-full max-w-2xl flex flex-col items-center gap-6 mb-12">
+        
+        <p v-if="quizzes.length === 0" class="w-full text-center text-xl font-mono font-bold bg-pink-300 border-4 border-black p-6 shadow-[4px_4px_0px_rgba(0,0,0,1)] transform -rotate-1">
           No quizzes found. Go create some chaos!
         </p>
 
-        <!-- Boucle sur les quiz -->
-        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-row">
-          <span class="quiz-name">{{ quiz.name }}</span>
-          <div class="row-buttons">
-            <button class="action-btn" @click="playQuiz(quiz.id)">play</button>
-            <button class="edit-btn" @click="editQuiz(quiz.id)">edit</button>
+        <div 
+          v-for="quiz in quizzes" 
+          :key="quiz.id" 
+          class="w-full border-4 border-black p-4 flex flex-col md:flex-row justify-between items-center bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all"
+        >
+          <span class="text-2xl font-bold font-mono mb-4 md:mb-0 text-center md:text-left break-words w-full md:w-auto">
+            {{ quiz.name }}
+          </span>
+          
+          <div class="flex gap-4 w-full md:w-auto justify-center">
+            <button 
+              @click="playQuiz(quiz.id)"
+              class="px-6 py-2 text-xl font-bold bg-green-400 border-4 border-black hover:bg-green-500 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+            >
+              play
+            </button>
+            <button 
+              @click="editQuiz(quiz.id)"
+              class="px-6 py-2 text-xl font-bold bg-yellow-300 border-4 border-black hover:bg-yellow-400 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+            >
+              edit
+            </button>
           </div>
         </div>
 
-        <!-- Les petits points de la maquette -->
-        <div v-if="quizzes.length > 0" class="dots">...</div>
+        <div v-if="quizzes.length > 0" class="text-4xl font-black tracking-widest mt-4">...</div>
       </div>
 
-      <!-- Bouton de retour -->
-      <button class="back-btn" @click="goBack">back</button>
+      <button 
+        @click="goBack"
+        class="px-10 py-4 text-xl font-bold bg-white border-4 border-black hover:bg-gray-200 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shadow-[6px_6px_0px_rgba(0,0,0,1)]"
+      >
+        back
+      </button>
 
     </div>
   </div>
@@ -77,98 +97,3 @@ const goBack = () => {
   router.push('/maker') // Retour à l'écran du créateur
 }
 </script>
-
-<style scoped>
-/* --- MISE EN PAGE GLOBALE --- */
-.list-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-  font-family: sans-serif;
-}
-
-.main-container {
-  border: 2px solid black;
-  padding: 3rem;
-  width: 800px;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* --- TITRE --- */
-.main-title {
-  font-size: 3rem;
-  margin: 0 0 3rem 0;
-}
-
-/* --- LISTE DES QUIZ --- */
-.quizzes-container {
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem; /* Espace entre chaque ligne */
-  margin-bottom: 3rem;
-}
-
-.quiz-row {
-  width: 100%;
-  border: 2px solid black;
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: white;
-}
-
-.quiz-name {
-  font-size: 1.5rem;
-}
-
-.edit-btn {
-  padding: 0.5rem 1.5rem;
-  font-size: 1.1rem;
-  border: 2px solid black;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.edit-btn:hover {
-  background-color: #eee;
-}
-
-.empty-msg {
-  font-size: 1.2rem;
-  color: #666;
-  font-style: italic;
-}
-
-.dots {
-  font-size: 1.5rem;
-  letter-spacing: 0.2rem;
-  margin-top: 1rem;
-}
-
-/* --- BOUTON RETOUR --- */
-.back-btn {
-  padding: 1rem 3rem;
-  font-size: 1.5rem;
-  border: 2px solid black;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.back-btn:hover {
-  background-color: #f0f0f0;
-}
-</style>
