@@ -135,8 +135,8 @@ onMounted(() => {
     if (myAnswer.value === 'RAGE_QUIT_ABANDON') {
       isCorrect.value = false;
     } else if (correct.length === 0) {
-      // S'il n'y a AUCUNE bonne réponse, on considère que c'est gagné car participation
-      isCorrect.value = true;
+      // S'il n'y a AUCUNE bonne réponse, on gagne SEULEMENT si on a rien répondu
+      isCorrect.value = (myAnswer.value === '' || myAnswer.value === undefined);
     } else {
       isCorrect.value = correct.includes(myAnswer.value);
     }

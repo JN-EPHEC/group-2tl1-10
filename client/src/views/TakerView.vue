@@ -83,7 +83,7 @@ const joinGame = () => {
         if (Response.success) {
             isWaiting.value = true // Ca marche, passage en mode attente
         } else {
-            alert(Response.Message) // Le code était faux
+            alert(Response.message) // Le code était faux
         }
     })
 }
