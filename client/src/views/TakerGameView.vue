@@ -3,13 +3,13 @@
     
     <div v-if="screen === 'playing'" class="w-full max-w-2xl flex flex-col p-4">
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full mb-8 relative">
         <button 
           v-for="(ans, i) in answers" :key="ans + i" 
           @click="submitAnswer(ans)"
           @mouseenter="jumpButton(i)"
-          :style="{ top: jumpPositions[i]?.top + 'px', left: jumpPositions[i]?.left + 'px', position: 'relative' }"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words"
+          :style="{ top: `${jumpPositions[i]?.y || 0}px`, left: `${jumpPositions[i]?.x || 0}px`, position: 'relative' }"
+          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10"
         >
           {{ ans }}
         </button>
@@ -94,9 +94,9 @@ const isCorrect = ref(false)
 const myAnswer = ref('') 
 const currentSettings = ref<any>({})
 const hasConfused = ref(false)
-const jumpPositions = ref<{top: number, left: number}[]>([])
+const jumpPositions = ref<{x: number, y: number}[]>([])
 
-// Analyse ultra-robuste des paramètres
+// Analyse des paramètres du backend
 const parseSettings = (rawSettings: any) => {
   let parsed = rawSettings;
   if (typeof rawSettings === 'string') {
@@ -114,14 +114,14 @@ onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     answers.value = data.answers
     currentSettings.value = parseSettings(data.settings)
-    // Initialise les positions des boutons à 0
-    jumpPositions.value = data.answers.map(() => ({top: 0, left: 0}))
+    // On initialise les positions à 0 pour chaque bouton
+    jumpPositions.value = data.answers.map(() => ({x: 0, y: 0}))
     screen.value = 'playing'
     hasConfused.value = false
   })
 
   socket.on('results_revealed', (data: any) => {
-    // On force la réponse en Tableau pour éviter les crashs (String vs Array)
+    // Force la réponse en tableau pour gérer les réponses multiples sans planter
     let correct = data.correctAnswers || data.correctAnswer;
     if (correct === undefined || correct === null) correct = [];
     if (!Array.isArray(correct)) correct = [correct];
@@ -129,10 +129,9 @@ onMounted(() => {
     if (myAnswer.value === 'RAGE_QUIT_ABANDON') {
       isCorrect.value = false;
     } else if (correct.length === 0) {
-      // S'il n'y a AUCUNE bonne réponse définie, tout le monde gagne !
+      // S'il n'y a AUCUNE bonne réponse, on considère que c'est gagné car participation
       isCorrect.value = true;
     } else {
-      // Sinon, on vérifie si notre réponse est dans la liste des bonnes réponses
       isCorrect.value = correct.includes(myAnswer.value);
     }
 
@@ -148,7 +147,7 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       answers.value = data.answers
       currentSettings.value = parseSettings(data.settings)
-      jumpPositions.value = data.answers.map(() => ({top: 0, left: 0}))
+      jumpPositions.value = data.answers.map(() => ({x: 0, y: 0}))
       screen.value = 'playing'
       hasAnswered.value = false 
       hasConfused.value = false
@@ -170,12 +169,15 @@ const playSound = (soundName: string) => {
   });
 }
 
+// Fonction de saut du bouton corrigée !
 const jumpButton = (index: number) => {
   if (!currentSettings.value?.jumpingButtons) return;
-  // Déplacement aléatoire entre -100px et +100px
-  const randomX = Math.floor(Math.random() * 200) - 100;
-  const randomY = Math.floor(Math.random() * 200) - 100;
-  jumpPositions.value[index] = { top: randomY, left: randomX };
+  
+  // Fait fuir le bouton de -150px à +150px autour de sa position initiale
+  jumpPositions.value[index] = {
+    x: Math.floor(Math.random() * 300) - 150,
+    y: Math.floor(Math.random() * 300) - 150
+  };
 }
 
 const submitAnswer = (answerText: string) => {

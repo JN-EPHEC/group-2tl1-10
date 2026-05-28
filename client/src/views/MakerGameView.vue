@@ -143,7 +143,7 @@ const timer = ref(15)
 const confusedCount = ref(0)
 const roomCode = route.params.roomCode as string
 const screen = ref('playing') 
-const correctAnswersList = ref<string[]>([]) // Transformé en un vrai tableau
+const correctAnswersList = ref<string[]>([]) 
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
 
@@ -156,10 +156,9 @@ const playSound = (soundName: string) => {
   });
 }
 
-// Vérification robuste
+// Vérification corrigée : si aucune réponse n'est définie, RIEN ne s'allume en vert !
 const isAnswerCorrect = (ans: string) => {
-  // S'il n'y a aucune bonne réponse définie, toutes les réponses s'allument en vert
-  if (correctAnswersList.value.length === 0) return true;
+  if (correctAnswersList.value.length === 0) return false;
   return correctAnswersList.value.includes(ans);
 }
 
@@ -169,8 +168,13 @@ onMounted(() => {
     startTimer()
   })
 
+  // === NOUVEL ÉCOUTEUR === 
+  // Coupe le chrono automatiquement quand le backend prévient que tout le monde a voté
+  socket.on('all_players_answered', () => {
+    showAnswer();
+  })
+
   socket.on('results_revealed', (data: any) => {
-    // Force la création d'un tableau propre peu importe ce qu'envoie le backend
     let correct = data.correctAnswers || data.correctAnswer;
     if (correct === undefined || correct === null) correct = [];
     if (!Array.isArray(correct)) correct = [correct];
