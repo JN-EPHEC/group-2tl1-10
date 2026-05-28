@@ -171,13 +171,20 @@ io.on("connection", (Socket) => {
                 return;
             }
 
+            // Garder seulement les joueurs actuellement connectés
+            const connectedPlayers = game.players.filter((p: any) => {
+                const socket = io.sockets.sockets.get(p.id);
+                return socket !== undefined;
+            });
+            game.players = connectedPlayers;
+
             // On prépare la partie
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
             game.confusedCount = 0;
             game.status = 'playing';
 
-            game.scores = {}; 
+            game.scores = {};
             game.responses = {};
             game.sessionIds = {};
             game.questionStartTime = Date.now();
