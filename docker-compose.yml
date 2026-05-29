@@ -5,6 +5,8 @@ services:
     build: ./server
     env_file:
       - ./server/.env
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./server:/app
       - /app/node_modules 
@@ -16,7 +18,3 @@ services:
       - /app/node_modules 
     depends_on:
       - backend
-
-volumes:
-  caddy_data:
-  caddy_config:
