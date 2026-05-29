@@ -10,7 +10,9 @@
         <QrcodeVue :value="joinUrl" :size="110" level="H" />
       </div>
 
-      <h1 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase tracking-tight">
+      <h1 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase tracking-tight"></h1>
+
+      <h1 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase tracking-tight md:px-32">
         Waiting for victims
       </h1>
 
