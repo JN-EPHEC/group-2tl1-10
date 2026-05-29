@@ -122,4 +122,37 @@ describe('Auth Controller', () => {
             expect(mockRes.status).toHaveBeenCalledWith(200);
         });
     });
+
+describe('Auth Controller - Le nettoyage final (Erreurs & Catch)', () => {
+    it('doit attraper et envoyer les erreurs serveur lors du login au middleware next', async () => {
+        const req = { body: { email: 'test@test.com', password: 'password123' } } as any;
+        const res = {} as any;
+        const next = jest.fn();
+
+        // On simule un crash violent de la base de données (adapte "User" si ton modèle s'appelle autrement)
+        const User = require('../models/user.model').default; 
+        (User.findOne as jest.Mock).mockRejectedValue(new Error('Crash DB Login'));
+
+        // Adapte "login" si ta fonction s'appelle différemment (ex: loginUser)
+        const { login } = require('../controllers/auth.controller');
+        await login(req, res, next);
+
+        // Vérifie que le crash a bien été intercepté et envoyé au gestionnaire d'erreurs
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    it('doit attraper les erreurs serveur lors de l\'inscription', async () => {
+        const req = { body: { username: 'test', email: 'test@test.com', password: 'password123' } } as any;
+        const res = {} as any;
+        const next = jest.fn();
+
+        const User = require('../models/user.model').default;
+        (User.create as jest.Mock).mockRejectedValue(new Error('Crash DB Register'));
+
+        const { register } = require('../controllers/auth.controller'); // Adapte si besoin
+        await register(req, res, next);
+
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+});
 });

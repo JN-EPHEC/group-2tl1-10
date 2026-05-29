@@ -110,19 +110,35 @@
           </div>
         </div>
 
-        <div class="flex w-full justify-between mt-12 pt-6 border-t-4 border-black">
+       <div class="flex flex-col md:flex-row w-full justify-between items-center gap-6 mt-12 pt-6 border-t-4 border-black">
+          
           <button 
             @click="exitGame"
             class="px-6 py-3 font-bold font-mono bg-white border-4 border-black hover:bg-red-400 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
           >
             Exit Game
           </button>
+
           <button 
+            v-if="currentQ.index < currentQ.total - 1"
             @click="nextQuestion"
             class="px-8 py-4 text-xl font-black bg-green-400 border-4 border-black hover:bg-green-500 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
           >
             Next Question ➡️
           </button>
+
+          <div v-else class="flex flex-col items-end gap-2">
+            <span class="text-sm font-bold text-red-500 font-mono animate-pulse bg-red-100 px-2 py-1 border-2 border-red-500">
+              ⚠️ Plus de questions disponibles
+            </span>
+            <button 
+              @click="terminateSession"
+              class="px-8 py-4 text-xl font-black text-white bg-red-600 border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:bg-red-700 transition-all active:translate-y-2 active:translate-x-2 active:shadow-none"
+            >
+              Terminer l'évaluation
+            </button>
+          </div>
+
         </div>
 
       </div>
@@ -135,6 +151,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
+import { audioManager } from '../services/audioManager'
 
 const route = useRoute()
 const router = useRouter()
@@ -146,17 +163,17 @@ const screen = ref('playing')
 const correctAnswersList = ref<string[]>([]) 
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
-const backgroundMusic = new Audio('/sounds/ambiance-absurde.mp3') // TODO: Mettre une vrai musique
-backgroundMusic.loop = true
-backgroundMusic.volume = 0.3
 
 let timerInterval: any = null;
+let isConfusedSoundPlaying = false;
 
-const playSound = (soundName: string) => {
-  const audio = new Audio(`/sounds/${soundName}.mp3`);
-  audio.play().catch(error => {
-    console.warn("Le navigateur a bloqué l'audio :", error);
-  });
+// Lecteurs de son abusde
+const triggerRickroll = () => {
+  audioManager.play('/sounds/rickroll-good.mp3');
+};
+
+const startBackgroundMusic = () => {
+  audioManager.play('/sounds/Nintendo Wii - Mii Channel Theme [po-0n1BKW2w].mp3', true); // Le "true" active une boucle
 }
 
 // Vérification corrigée : si aucune réponse n'est définie, RIEN ne s'allume en vert !
@@ -165,17 +182,32 @@ const isAnswerCorrect = (ans: string) => {
   return correctAnswersList.value.includes(ans);
 }
 
+const terminateSession = () => {
+  // On récupère proprement le code dans l'URL de la route actuelle
+  const room = route.params.roomCode || route.params.id; 
+  
+  // On envoie le bon code de salle au serveur
+  socket.emit("terminate_game", room); 
+  
+  router.push('/maker/list');
+};
+
 onMounted(() => {
+  audioManager.stop()
+
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
-    timer.value = data.timeLimit || 15
+    // On force la conversion en Nombre, en fouillant aussi dans les settings au cas où
+    timer.value = data.timeLimit
     startTimer()
+    startBackgroundMusic()
   })
 
   // === NOUVEL ÉCOUTEUR === 
   // Coupe le chrono automatiquement quand le backend prévient que tout le monde a voté
   socket.on('all_players_answered', () => {
     showAnswer();
+    audioManager.stop()
   })
 
   socket.on('results_revealed', (data: any) => {
@@ -186,37 +218,52 @@ onMounted(() => {
     correctAnswersList.value = correct;
     leaderboard.value = data.leaderboard
     screen.value = 'results' 
+    audioManager.stop()
   })
 
   socket.on('next_question_ready', () => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       currentQ.value = data
       screen.value = 'playing'
-      timer.value = data.timeLimit || 15
+      
+      timer.value = Number(data.timeLimit || 15) 
+      
       confusedCount.value = 0
       startTimer()
+      startBackgroundMusic()
     })
   })
 
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-    if (count >= 0) {
-      playSound('ia-ia-ahh-yeye-yeye-lovely-sad')
+    if (count > 0 && currentQ.value?.settings?.enableSounds && !isConfusedSoundPlaying) {
+      isConfusedSoundPlaying = true;
+  
+      const audio = new Audio('/sounds/ia-ia-ahh-yeye-yeye-lovely-sad.mp3');
+      audio.play().catch(e => console.log("Audio bloqué :", e));
+  
+      audio.onended = () => {
+        isConfusedSoundPlaying = false;
+      };
     }
-  })
+  });
 
   socket.on('activate_rickroll', () => {
-    isRickrolling.value = true;
-    setTimeout(() => { isRickrolling.value = false; }, 5000);
-    playSound('rickroll-good')
+      isRickrolling.value = true;
+      setTimeout(() => { isRickrolling.value = false; }, 5000);
+      audioManager.stop()
+      if (currentQ.value?.settings?.enableSounds) {
+        triggerRickroll()
+      }
   })
 
   socket.on("all_players_answered", () => {
     showAnswer();
+    audioManager.stop()
   })
 
   socket.on('game_over', () => {
-    backgroundMusic.pause()
+    audioManager.stop()
     alert("C'est la fin du Quiz ! Admirez le classement final.")
   })
 })
@@ -254,7 +301,7 @@ const showLeaderboard = () => {
 }
 
 const exitGame = () => {
-  if (window.confirm("Veux-tu vraiment rage_quit ? Tes joueurs vont rester coincés dans le vide !")) {
+  if (window.confirm("Veux-tu mettre fin à la souffrance des victimes ?")) {
     router.push('/maker/list')
   }
 }

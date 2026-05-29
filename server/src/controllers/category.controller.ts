@@ -35,8 +35,8 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
                     correctAnswer: correctAnswers.length > 0 ? JSON.stringify(correctAnswers) : null,
                     correctAnswers: correctAnswers.length > 0 ? correctAnswers : [],
                     categoryId: newCategory.id,
-                    difficulty: q.timeLimit || 1
-                    // TODO : Ajouter time limit pour le temps
+                    difficulty: q.timeLimit || 1,
+                    timeLimit: q.timeLimit || 15
                 });
 
                 if (q.settings) {
@@ -167,6 +167,38 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 
         return res.status(200).json({ message: "Quiz mis à jour avec succès !" });
     } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        
+        // 1. Trouver toutes les questions liées à ce quiz (categoryId)
+        const questions = await Question.findAll({ where: { categoryId: id } });
+        
+        // On extrait juste les IDs des questions dans un tableau [1, 2, 3...]
+        const questionIds = questions.map((q: any) => q.id);
+
+        // 2. Si on a trouvé des questions, on détruit d'abord leurs paramètres (Settings)
+        if (questionIds.length > 0) {
+            await Setting.destroy({ where: { questionId: questionIds } });
+        }
+
+        // 3. Maintenant on peut détruire les questions sans erreur de contrainte SQL !
+        await Question.destroy({ where: { categoryId: id } });
+
+        // 4. Et enfin, on détruit le quiz (Category)
+        const deleted = await Category.destroy({ where: { id } });
+        
+        if (deleted) {
+            res.status(200).json({ success: true, message: "Quiz et données liées supprimés avec succès." });
+        } else {
+            res.status(404).json({ success: false, message: "Quiz introuvable." });
+        }
+    } catch (error) {
+        console.error("Erreur destruction quiz:", error);
         next(error);
     }
 };

@@ -18,12 +18,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { audioManager } from '../services/audioManager'
 
 const router = useRouter()
 
+const bruhSound = () => {
+  audioManager.play('sounds/bruh.mp3')
+}
+
 onMounted(() => {
-  const bruhSound = new Audio('https://www.myinstants.com/media/sounds/movie_1.mp3')
-  bruhSound.play().catch(e => console.log("Son bloqué", e))
+  bruhSound()
 })
 
 const goBack = () => {

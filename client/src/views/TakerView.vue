@@ -55,6 +55,12 @@
           <p class="text-lg font-mono animate-pulse leading-relaxed">
             Look at the main screen.<br>Waiting for the host to start...
           </p>
+          <button 
+          @click="leaveLobby"
+          class="px-6 py-3 font-bold bg-white border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:bg-gray-100 active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+          >
+          Quitter la salle
+          </button>
         </div>
 
       </div>
@@ -65,16 +71,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { socket } from '../services/socket'
 
 const router = useRouter()
 const roomCode = ref('')
 const username = ref('')
 const isWaiting = ref(false)
+const route = useRoute()
 
 onMounted(() => {
     socket.connect()
+    if (route.query.code) {
+      roomCode.value = route.query.code as string
+      console.log("Code récupéré automatiquement depuis le QR Code :", route.query.code)
+    }
 })
 
 const joinGame = () => {
@@ -86,6 +97,13 @@ const joinGame = () => {
             alert(Response.message) // Le code était faux
         }
     })
+}
+
+const leaveLobby = () => {
+  // On prévient le serveur qu'on abandonne la salle
+  socket.emit('leave_game', roomCode.value)
+  // On redirige le joueur vers l'écran de saisie du code ou l'accueil 
+  router.push('/')
 }
 
 socket.on('game_started', () => {

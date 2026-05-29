@@ -125,6 +125,28 @@ io.on("connection", (Socket) => {
         }
     });
 
+    // Un joueur décide de quitter volontairement le lobby avant le début
+    Socket.on("leave_game", (roomCode) => {
+        const game = activeGames[roomCode];
+        
+        // On vérifie que la partie existe ET que players est bien un tableau
+        if (game && Array.isArray(game.players)) {
+            const player = game.players.find((p: any) => p.id === Socket.id);
+            
+            if (player) {
+                // On l'enlève du tableau
+                game.players = game.players.filter((p: any) => p.id !== Socket.id);
+                // On prévient le créateur
+                Socket.to(game.hostId).emit("player_left", player.username);
+            }
+        }
+        
+        // Le socket quitte la room de manière sécurisée (même si le roomCode est undefined)
+        if (roomCode) {
+            Socket.leave(roomCode);
+        }
+    });
+
     Socket.on("start_game", async (roomCode) => {
         const game = activeGames[roomCode];
         if (!game || game.hostId !== Socket.id) return;
@@ -159,6 +181,7 @@ io.on("connection", (Socket) => {
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
             game.confusedCount = 0;
+            game.rickrollUsed = false;
             game.status = 'playing';
 
             game.scores = {};
@@ -208,6 +231,19 @@ io.on("connection", (Socket) => {
             catch { correctAnswers = q.correctAnswer ? [q.correctAnswer] : []; }
         }
 
+        let parsedTime = 15; // Temps par défaut si tout échoue
+        
+        if (q.difficulty) {
+            parsedTime = q.difficulty;
+        } else if (q.timeLimit) {
+            parsedTime = q.timeLimit;
+        } else if (q.settings && q.settings.timeLimit) {
+            parsedTime = q.settings.timeLimit;
+        }
+
+        // On affiche dans le terminal backend ce qu'on a réellement trouvé
+        console.log(`⏱️ [ROOM ${roomCode}] Question Index ${game.currentQuestionIndex} -> Temps extrait : ${parsedTime}s (Brut DB - difficulty: ${q.difficulty}, timeLimit: ${q.timeLimit})`);
+
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
             text: q.title,
@@ -215,7 +251,7 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: 15,
+            timeLimit: Number(parsedTime),
             hasNoCorrectAnswer: correctAnswers.length === 0
         });
     });
@@ -323,6 +359,7 @@ io.on("connection", (Socket) => {
         if (!game) return;
 
         game.confusedCount = 0;
+        game.rickrollUsed = false;
 
         // Sécurité : On empêche l'index d'aller plus loin que la fin du jeu
         if (game.currentQuestionIndex >= game.questions.length) return;
@@ -379,6 +416,15 @@ io.on("connection", (Socket) => {
         const game = activeGames[roomCode];
         if (!game) return;
 
+        // ANTI-SPAM : Si la game n'existe pas ou que le Rickroll a DEJA été utilisé, on bloque !
+        if (!game || game.rickrollUsed) {
+            return;
+        }
+
+        // Si on arrive ici, c'est le PREMIER joueur à cliquer.
+        // On ferme instantanément le verrou pour tous les autres.
+        game.rickrollUsed = true;
+
         // On prévient le créateur d'afficher le Rickroll
         io.to(game.hostId).emit("activate_rickroll");
     });
@@ -407,6 +453,15 @@ io.on("connection", (Socket) => {
             }
         }
     })
+
+    // Le créateur décide de fermer définitivement la salle de jeu
+    Socket.on("terminate_game", (roomCode) => {
+        // On envoie le signal de fin de jeu à TOUS les joueurs de la salle
+        io.to(roomCode).emit("game_over");
+        // On nettoie la mémoire du serveur
+        delete activeGames[roomCode];
+        console.log(`Fermeture forcée de la room ${roomCode} par le créateur.`);
+    });
 });
 
 const PORT = process.env.PORT || 3000;

@@ -86,6 +86,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
+import { audioManager } from '../services/audioManager'
 
 const route = useRoute()
 const router = useRouter()
@@ -99,6 +100,23 @@ const currentSettings = ref<any>({})
 const hasConfused = ref(false)
 const hasNoCorrectAnswer = ref(false)
 const jumpPositions = ref<{x: number, y: number}[]>([])
+
+// Déclaration des sons (AVEC CONDITION DE JEU)
+const triggerAnswerSubmitted = () => {
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/ive-got-this.mp3')
+}
+
+const triggerCorrectSound = () => {
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/mlg-horns-sound-effect.mp3')
+}
+
+const trrigerIncorrectSound = () => {
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/fahhhhhhhhhhhhhh.mp3')
+}
+
+const trrigerRagequitSound = () => {
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/chicken-on-tree-screaming.mp3')
+}
 
 // Analyse des paramètres du backend
 const parseSettings = (rawSettings: any) => {
@@ -146,6 +164,8 @@ onMounted(() => {
   })
 
   socket.on('results_revealed', (data: any) => {
+    audioManager.stop();
+
     // Force la réponse en tableau pour gérer les réponses multiples sans planter
     let correct = data.correctAnswers || data.correctAnswer;
     if (correct === undefined || correct === null) correct = [];
@@ -162,9 +182,9 @@ onMounted(() => {
 
     screen.value = 'results'
     if (isCorrect.value) {
-      playSound('mlg-horns-sound-effect')
+      triggerCorrectSound()
     } else {
-      playSound('fahhhhhhhhhhhhhh')
+      trrigerIncorrectSound()
     }
   })
 
@@ -187,7 +207,7 @@ onMounted(() => {
   })
 
   socket.on('game_over', () => {
-    alert("Le quiz est terminé ! Tu peux retourner à l'accueil.")
+    alert("Votre participation a été enregistrée. Un agent de sécurité passera confisquer votre âme sous peu. Merci d'avoir joué !");
     router.push('/')
   })
 })
@@ -198,14 +218,6 @@ onUnmounted(() => {
   socket.off('next_question_ready')
   socket.off('game_over')
 })
-
-const playSound = (soundName: string) => {
-  if (!currentSettings.value?.enableSounds) return;
-  const audio = new Audio(`/sounds/${soundName}.mp3`);
-  audio.play().catch(error => {
-    console.warn("Le navigateur a bloqué l'audio :", error);
-  });
-}
 
 // Fonction de saut du bouton corrigée !
 const jumpButton = (index: number) => {
@@ -222,7 +234,7 @@ const submitAnswer = (answerText: string) => {
   myAnswer.value = answerText
   screen.value = 'waiting'
   socket.emit('submit_answer', { roomCode, answer: answerText })
-  playSound('ive-got-this')
+  triggerAnswerSubmitted()
 }
 
 const sendConfused = () => {
@@ -239,6 +251,6 @@ const triggerRageQuit = () => {
   socket.emit('submit_answer', { roomCode, answer: 'RAGE_QUIT_ABANDON' });
   isCorrect.value = false;
   screen.value = 'results';
-  playSound('chicken-on-tree-screaming')
+  trrigerRagequitSound()
 }
 </script>

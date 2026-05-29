@@ -35,6 +35,13 @@
             >
               edit
             </button>
+            <button 
+            @click="deleteQuiz(quiz.id)" 
+            class="px-4 py-2 bg-red-500 text-white font-bold border-4 border-black hover:bg-red-600 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+            title="Détruire ce quiz"
+          >
+            Delete
+          </button>
           </div>
         </div>
 
@@ -92,6 +99,29 @@ const editQuiz = (quizId: number) => {
   console.log("Direction l'éditeur pour le quiz n°", quizId)
   router.push(`/maker/edit/${quizId}`)
 }
+
+const deleteQuiz = async (quizId: number) => {
+  if (confirm("Es-tu sûr de vouloir détruire ce quiz ? Cette action est irréversible.")) {
+    try {
+      const response = await fetch(`/api/categories/${quizId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}` // LE VOILÀ TON PASSEPORT VALIDE !
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        quizzes.value = quizzes.value.filter((q: any) => q.id !== quizId);
+      } else {
+        console.error("Erreur backend:", data.message);
+      }
+    } catch (error) {
+      console.error("Erreur réseau :", error);
+    }
+  }
+};
 
 const goBack = () => {
   router.push('/maker') // Retour à l'écran du créateur
