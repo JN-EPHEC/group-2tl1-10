@@ -125,6 +125,28 @@ io.on("connection", (Socket) => {
         }
     });
 
+    // Un joueur décide de quitter volontairement le lobby avant le début
+    Socket.on("leave_game", (roomCode) => {
+        const game = activeGames[roomCode];
+        
+        // On vérifie que la partie existe ET que players est bien un tableau
+        if (game && Array.isArray(game.players)) {
+            const player = game.players.find((p: any) => p.id === Socket.id);
+            
+            if (player) {
+                // On l'enlève du tableau
+                game.players = game.players.filter((p: any) => p.id !== Socket.id);
+                // On prévient le créateur
+                Socket.to(game.hostId).emit("player_left", player.username);
+            }
+        }
+        
+        // Le socket quitte la room de manière sécurisée (même si le roomCode est undefined)
+        if (roomCode) {
+            Socket.leave(roomCode);
+        }
+    });
+
     Socket.on("start_game", async (roomCode) => {
         const game = activeGames[roomCode];
         if (!game || game.hostId !== Socket.id) return;
@@ -216,7 +238,7 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: 15,
+            timeLimit: q.settings?.timeLimit || 15,
             hasNoCorrectAnswer: correctAnswers.length === 0
         });
     });

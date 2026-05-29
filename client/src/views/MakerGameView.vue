@@ -110,19 +110,35 @@
           </div>
         </div>
 
-        <div class="flex w-full justify-between mt-12 pt-6 border-t-4 border-black">
+       <div class="flex flex-col md:flex-row w-full justify-between items-center gap-6 mt-12 pt-6 border-t-4 border-black">
+          
           <button 
             @click="exitGame"
             class="px-6 py-3 font-bold font-mono bg-white border-4 border-black hover:bg-red-400 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
           >
             Exit Game
           </button>
+
           <button 
+            v-if="currentQ.index < currentQ.total - 1"
             @click="nextQuestion"
             class="px-8 py-4 text-xl font-black bg-green-400 border-4 border-black hover:bg-green-500 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
           >
             Next Question ➡️
           </button>
+
+          <div v-else class="flex flex-col items-end gap-2">
+            <span class="text-sm font-bold text-red-500 font-mono animate-pulse bg-red-100 px-2 py-1 border-2 border-red-500">
+              ⚠️ Plus de questions disponibles
+            </span>
+            <button 
+              @click="exitGame"
+              class="px-8 py-4 text-xl font-black text-white bg-red-600 border-4 border-black hover:bg-red-700 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
+            >
+              Terminer l'évaluation
+            </button>
+          </div>
+
         </div>
 
       </div>

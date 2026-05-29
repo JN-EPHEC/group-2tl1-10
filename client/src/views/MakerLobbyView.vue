@@ -102,11 +102,17 @@ onMounted(() => {
         players.value.push(username)
     })
 
+    // Ecoute du joeur qui s'en va
+    socket.on('player_left', (username: string) => {
+        players.value = players.value.filter(p => p !== username)
+    })
+
     waitingMusic()
 })
 
 onUnmounted(() => {
     socket.off('player_joined')
+    socket.off('player_left')
     audioManager.stop()
 })
 
