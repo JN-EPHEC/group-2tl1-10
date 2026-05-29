@@ -231,15 +231,18 @@ io.on("connection", (Socket) => {
             catch { correctAnswers = q.correctAnswer ? [q.correctAnswer] : []; }
         }
 
-        let parsedTime = 15;
+        let parsedTime = 15; // Temps par défaut si tout échoue
+        
         if (q.difficulty) {
             parsedTime = q.difficulty;
+        } else if (q.timeLimit) {
+            parsedTime = q.timeLimit;
         } else if (q.settings && q.settings.timeLimit) {
             parsedTime = q.settings.timeLimit;
         }
 
         // On affiche dans le terminal backend ce qu'on a réellement trouvé
-        console.log(`⏱️ Temps envoyé pour la question : ${parsedTime} secondes`);
+        console.log(`⏱️ [ROOM ${roomCode}] Question Index ${game.currentQuestionIndex} -> Temps extrait : ${parsedTime}s (Brut DB - difficulty: ${q.difficulty}, timeLimit: ${q.timeLimit})`);
 
         // On renvoie la donnée pile quand le frontend la réclame
         callback({

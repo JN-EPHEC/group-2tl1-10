@@ -225,8 +225,9 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       currentQ.value = data
       screen.value = 'playing'
-      // La même correction ici
-      timer.value = Number(data.settings?.timeLimit || data.timeLimit || 15)
+      
+      timer.value = Number(data.timeLimit || 15) 
+      
       confusedCount.value = 0
       startTimer()
       startBackgroundMusic()
