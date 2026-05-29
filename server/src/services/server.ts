@@ -440,6 +440,15 @@ io.on("connection", (Socket) => {
             }
         }
     })
+
+    // Le créateur décide de fermer définitivement la salle de jeu
+    Socket.on("terminate_game", (roomCode) => {
+        // On envoie le signal de fin de jeu à TOUS les joueurs de la salle
+        io.to(roomCode).emit("game_over");
+        // On nettoie la mémoire du serveur
+        delete activeGames[roomCode];
+        console.log(`Fermeture forcée de la room ${roomCode} par le créateur.`);
+    });
 });
 
 const PORT = process.env.PORT || 3000;

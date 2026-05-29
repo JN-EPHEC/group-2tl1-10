@@ -103,7 +103,7 @@ const leaveLobby = () => {
   // On prévient le serveur qu'on abandonne la salle
   socket.emit('leave_game', roomCode.value)
   // On redirige le joueur vers l'écran de saisie du code ou l'accueil 
-  router.push('/taker')
+  router.push('/')
 }
 
 socket.on('game_started', () => {

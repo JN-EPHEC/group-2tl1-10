@@ -132,8 +132,8 @@
               ⚠️ Plus de questions disponibles
             </span>
             <button 
-              @click="exitGame"
-              class="px-8 py-4 text-xl font-black text-white bg-red-600 border-4 border-black hover:bg-red-700 shadow-[6px_6px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all"
+              @click="terminateSession"
+              class="px-8 py-4 text-xl font-black text-white bg-red-600 border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:bg-red-700 transition-all active:translate-y-2 active:translate-x-2 active:shadow-none"
             >
               Terminer l'évaluation
             </button>
@@ -165,6 +165,7 @@ const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
 
 let timerInterval: any = null;
+let isConfusedSoundPlaying = false;
 
 // Lecteurs de son abusde
 const triggerRickroll = () => {
@@ -175,15 +176,18 @@ const startBackgroundMusic = () => {
   audioManager.play('/sounds/Nintendo Wii - Mii Channel Theme [po-0n1BKW2w].mp3', true); // Le "true" active une boucle
 }
 
-const triggerDumbsound = () => {
-  audioManager.play('/sounds/ia-ia-ahh-yeye-yeye-lovely-sad.mp3')
-}
-
 // Vérification corrigée : si aucune réponse n'est définie, RIEN ne s'allume en vert !
 const isAnswerCorrect = (ans: string) => {
   if (correctAnswersList.value.length === 0) return false;
   return correctAnswersList.value.includes(ans);
 }
+
+const terminateSession = () => {
+  // On envoie le signal au backend pour éjecter tout le monde
+  socket.emit("terminate_game", roomCode.value); // Vérifie si ta ref s'appelle roomCode ou roomCode.value
+  // Le créateur retourne à sa liste
+  router.push('/maker/list');
+};
 
 onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
@@ -224,10 +228,21 @@ onMounted(() => {
 
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-    if (count >= 0 && !audioManager.isPlaying) {
-      triggerDumbsound()
+  
+    // Si le compteur bouge et que CE son précis n'est pas déjà en train de jouer
+    if (count >= 0 && !isConfusedSoundPlaying) {
+      isConfusedSoundPlaying = true;
+    
+      // On crée un Audio natif pour bypasser le verrou de la musique de fond
+      const audio = new Audio('/sounds/ia-ia-ahh-yeye-yeye-lovely-sad.mp3');
+      audio.play().catch(e => console.log("Audio bloqué :", e));
+    
+      // Dès que le bruitage est fini, on rouvre le verrou pour le prochain clic
+      audio.onended = () => {
+        isConfusedSoundPlaying = false;
+      };
     }
-  })
+  });
 
   socket.on('activate_rickroll', () => {
     isRickrolling.value = true;
@@ -280,7 +295,7 @@ const showLeaderboard = () => {
 }
 
 const exitGame = () => {
-  if (window.confirm("Veux-tu vraiment rage_quit ? Tes joueurs vont rester coincés dans le vide !")) {
+  if (window.confirm("Veux-tu mettre fin à la souffrance des victimes ?")) {
     router.push('/maker/list')
   }
 }

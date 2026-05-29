@@ -165,7 +165,7 @@ onMounted(() => {
 
   socket.on('results_revealed', (data: any) => {
     audioManager.stop();
-    
+
     // Force la réponse en tableau pour gérer les réponses multiples sans planter
     let correct = data.correctAnswers || data.correctAnswer;
     if (correct === undefined || correct === null) correct = [];
@@ -207,7 +207,7 @@ onMounted(() => {
   })
 
   socket.on('game_over', () => {
-    alert("Le quiz est terminé ! Tu peux retourner à l'accueil.")
+    alert("Votre participation a été enregistrée. Un agent de sécurité passera confisquer votre âme sous peu. Merci d'avoir joué !");
     router.push('/')
   })
 })
