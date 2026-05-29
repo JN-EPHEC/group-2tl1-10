@@ -67,6 +67,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { socket } from '../services/socket'
+import { audioManager } from '../services/audioManager'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -74,12 +75,17 @@ const authStore = useAuthStore()
 // --- LE TITRE ALÉATOIRE (L'absurdité commence) ---
 const absurdTitles = [
   "Super duper memeable quiz maker 9000",
-  "Le Quiz qui va te faire rater tes partiels de Réseaux III",
+  "Le Quiz qui va te faire rater tes partiels",
   "Avez-vous essayé de l'éteindre et de le rallumer ?",
   "Encore un projet codé à 3h du matin",
   "Error 404 : Brain not found"
 ]
 const currentTitle = ref('')
+
+// Déclaration des sons
+const triggerDisconnect = () => {
+  audioManager.play('/sounds/tuco-get-out.mp3')
+}
 
 onMounted(() => {
   // Connection au serveur
@@ -103,14 +109,6 @@ onMounted(() => {
   }
 })
 
-// Fonctions audio 
-const playSound = (soundName: string) => {
-  const audio = new Audio(`/sounds/${soundName}.mp3`);
-  audio.play().catch(error => {
-    console.warn("Le navigateur a bloqué l'audio :", error);
-  });
-}
-
 // --- VARIABLES D'ÉTAT ---
 const displayName = ref('')
 
@@ -122,6 +120,6 @@ const goToLogin = () => {
 // Déconnecter l'utilisateur
 const handleLogout = () => {
   authStore.logout()
-  playSound('tuco-get-out')
+  triggerDisconnect()
 }
 </script>

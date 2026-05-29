@@ -86,6 +86,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
+import { audioManager } from '../services/audioManager'
 
 const route = useRoute()
 const router = useRouter()
@@ -99,6 +100,23 @@ const currentSettings = ref<any>({})
 const hasConfused = ref(false)
 const hasNoCorrectAnswer = ref(false)
 const jumpPositions = ref<{x: number, y: number}[]>([])
+
+// Déclaration des sons 
+const triggerAnswerSubmitted = () => {
+  audioManager.play('/sounds/ive-got-this.mp3')
+}
+
+const triggerCorrectSound = () => {
+  audioManager.play('/sounds/mlg-horns-sound-effect.mp3')
+}
+
+const trrigerIncorrectSound = () => {
+  audioManager.play('/sounds/fahhhhhhhhhhhhhh.mp3')
+}
+
+const trrigerRagequitSound = () => {
+  audioManager.play('/sounds/chicken-on-tree-screaming.mp3')
+}
 
 // Analyse des paramètres du backend
 const parseSettings = (rawSettings: any) => {
@@ -162,9 +180,9 @@ onMounted(() => {
 
     screen.value = 'results'
     if (isCorrect.value) {
-      playSound('mlg-horns-sound-effect')
+      triggerCorrectSound()
     } else {
-      playSound('fahhhhhhhhhhhhhh')
+      trrigerIncorrectSound()
     }
   })
 
@@ -199,14 +217,6 @@ onUnmounted(() => {
   socket.off('game_over')
 })
 
-const playSound = (soundName: string) => {
-  if (!currentSettings.value?.enableSounds) return;
-  const audio = new Audio(`/sounds/${soundName}.mp3`);
-  audio.play().catch(error => {
-    console.warn("Le navigateur a bloqué l'audio :", error);
-  });
-}
-
 // Fonction de saut du bouton corrigée !
 const jumpButton = (index: number) => {
   if (!currentSettings.value?.jumpingButtons) return;
@@ -222,7 +232,7 @@ const submitAnswer = (answerText: string) => {
   myAnswer.value = answerText
   screen.value = 'waiting'
   socket.emit('submit_answer', { roomCode, answer: answerText })
-  playSound('ive-got-this')
+  triggerAnswerSubmitted()
 }
 
 const sendConfused = () => {
@@ -239,6 +249,6 @@ const triggerRageQuit = () => {
   socket.emit('submit_answer', { roomCode, answer: 'RAGE_QUIT_ABANDON' });
   isCorrect.value = false;
   screen.value = 'results';
-  playSound('chicken-on-tree-screaming')
+  trrigerRagequitSound()
 }
 </script>

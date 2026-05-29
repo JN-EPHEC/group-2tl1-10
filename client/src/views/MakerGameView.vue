@@ -135,6 +135,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { socket } from '../services/socket'
 import { useRoute, useRouter } from 'vue-router'
+import { audioManager } from '../services/audioManager'
 
 const route = useRoute()
 const router = useRouter()
@@ -146,17 +147,20 @@ const screen = ref('playing')
 const correctAnswersList = ref<string[]>([]) 
 const leaderboard = ref<any[]>([])
 const isRickrolling = ref(false)
-const backgroundMusic = new Audio('/sounds/ambiance-absurde.mp3') // TODO: Mettre une vrai musique
-backgroundMusic.loop = true
-backgroundMusic.volume = 0.3
 
 let timerInterval: any = null;
 
-const playSound = (soundName: string) => {
-  const audio = new Audio(`/sounds/${soundName}.mp3`);
-  audio.play().catch(error => {
-    console.warn("Le navigateur a bloqué l'audio :", error);
-  });
+// Lecteurs de son abusde
+const triggerRickroll = () => {
+  audioManager.play('/sounds/rickroll-good.mp3');
+};
+
+const startBackgroundMusic = () => {
+  audioManager.play('/sounds/Nintendo Wii - Mii Channel Theme [po-0n1BKW2w].mp3', true); // Le "true" active une boucle
+}
+
+const triggerDumbsound = () => {
+  audioManager.play('/sounds/ia-ia-ahh-yeye-yeye-lovely-sad.mp3')
 }
 
 // Vérification corrigée : si aucune réponse n'est définie, RIEN ne s'allume en vert !
@@ -170,12 +174,14 @@ onMounted(() => {
     currentQ.value = data
     timer.value = data.timeLimit || 15
     startTimer()
+    startBackgroundMusic()
   })
 
   // === NOUVEL ÉCOUTEUR === 
   // Coupe le chrono automatiquement quand le backend prévient que tout le monde a voté
   socket.on('all_players_answered', () => {
     showAnswer();
+    audioManager.stop()
   })
 
   socket.on('results_revealed', (data: any) => {
@@ -186,6 +192,7 @@ onMounted(() => {
     correctAnswersList.value = correct;
     leaderboard.value = data.leaderboard
     screen.value = 'results' 
+    audioManager.stop()
   })
 
   socket.on('next_question_ready', () => {
@@ -195,28 +202,32 @@ onMounted(() => {
       timer.value = data.timeLimit || 15
       confusedCount.value = 0
       startTimer()
+      startBackgroundMusic()
     })
   })
 
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
     if (count >= 0) {
-      playSound('ia-ia-ahh-yeye-yeye-lovely-sad')
+      audioManager.stop()
+      triggerDumbsound()
     }
   })
 
   socket.on('activate_rickroll', () => {
     isRickrolling.value = true;
     setTimeout(() => { isRickrolling.value = false; }, 5000);
-    playSound('rickroll-good')
+    audioManager.stop()
+    triggerRickroll()
   })
 
   socket.on("all_players_answered", () => {
     showAnswer();
+    audioManager.stop()
   })
 
   socket.on('game_over', () => {
-    backgroundMusic.pause()
+    audioManager.stop()
     alert("C'est la fin du Quiz ! Admirez le classement final.")
   })
 })

@@ -70,6 +70,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { socket } from '../services/socket';
 import QrcodeVue from 'qrcode.vue'; 
+import { audioManager } from '../services/audioManager';
 
 const route = useRoute()
 const router = useRouter()
@@ -78,11 +79,13 @@ const roomCode = ref('')
 const players = ref<string[]>([])
 const quizId = route.params.id
 
+const waitingMusic = () => {
+  audioManager.play('/sounds/Elevator Music (Kevin MacLeod) - Background Music (HD) [xy_NKN75Jhw].mp3', true)
+}
+
 // Variable calculée dynamiquement avec des ACCENTS GRAVES (backticks) ``
 const joinUrl = computed(() => {
   if (!roomCode.value) return '' // Pas de code, pas d'url
-  // window.location.origin récupère automatiquement http://localhost:5173 ou le domaine VPS
-  // Adapte bien la route '/taker' si ce n'est pas la bonne !
   return `${window.location.origin}/taker?code=${roomCode.value}`
 })
 
@@ -98,10 +101,13 @@ onMounted(() => {
     socket.on('player_joined', (username: string) => {
         players.value.push(username)
     })
+
+    waitingMusic()
 })
 
 onUnmounted(() => {
     socket.off('player_joined')
+    audioManager.stop()
 })
 
 const goBack = () => {
