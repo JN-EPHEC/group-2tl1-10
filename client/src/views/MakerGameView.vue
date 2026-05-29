@@ -183,16 +183,22 @@ const isAnswerCorrect = (ans: string) => {
 }
 
 const terminateSession = () => {
-  // On envoie le signal au backend pour éjecter tout le monde
-  socket.emit("terminate_game", roomCode.value); // Vérifie si ta ref s'appelle roomCode ou roomCode.value
-  // Le créateur retourne à sa liste
+  // On récupère proprement le code dans l'URL de la route actuelle
+  const room = route.params.roomCode || route.params.id; 
+  
+  // On envoie le bon code de salle au serveur
+  socket.emit("terminate_game", room); 
+  
   router.push('/maker/list');
 };
 
 onMounted(() => {
+  audioManager.stop()
+
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
-    timer.value = data.timeLimit || 15
+    // On force la conversion en Nombre, en fouillant aussi dans les settings au cas où
+    timer.value = Number(data.settings?.timeLimit || data.timeLimit || 15)
     startTimer()
     startBackgroundMusic()
   })
@@ -219,7 +225,8 @@ onMounted(() => {
     socket.emit('get_current_question', roomCode, (data: any) => {
       currentQ.value = data
       screen.value = 'playing'
-      timer.value = data.timeLimit || 15
+      // La même correction ici
+      timer.value = Number(data.settings?.timeLimit || data.timeLimit || 15)
       confusedCount.value = 0
       startTimer()
       startBackgroundMusic()
@@ -228,16 +235,12 @@ onMounted(() => {
 
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-  
-    // Si le compteur bouge et que CE son précis n'est pas déjà en train de jouer
-    if (count >= 0 && !isConfusedSoundPlaying) {
+    if (count > 0 && currentQ.value?.settings?.enableSounds && !isConfusedSoundPlaying) {
       isConfusedSoundPlaying = true;
-    
-      // On crée un Audio natif pour bypasser le verrou de la musique de fond
+  
       const audio = new Audio('/sounds/ia-ia-ahh-yeye-yeye-lovely-sad.mp3');
       audio.play().catch(e => console.log("Audio bloqué :", e));
-    
-      // Dès que le bruitage est fini, on rouvre le verrou pour le prochain clic
+  
       audio.onended = () => {
         isConfusedSoundPlaying = false;
       };
@@ -245,10 +248,12 @@ onMounted(() => {
   });
 
   socket.on('activate_rickroll', () => {
-    isRickrolling.value = true;
-    setTimeout(() => { isRickrolling.value = false; }, 5000);
-    audioManager.stop()
-    triggerRickroll()
+      isRickrolling.value = true;
+      setTimeout(() => { isRickrolling.value = false; }, 5000);
+      audioManager.stop()
+      if (currentQ.value?.settings?.enableSounds) {
+        triggerRickroll()
+      }
   })
 
   socket.on("all_players_answered", () => {

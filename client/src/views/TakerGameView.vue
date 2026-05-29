@@ -101,21 +101,21 @@ const hasConfused = ref(false)
 const hasNoCorrectAnswer = ref(false)
 const jumpPositions = ref<{x: number, y: number}[]>([])
 
-// Déclaration des sons 
+// Déclaration des sons (AVEC CONDITION DE JEU)
 const triggerAnswerSubmitted = () => {
-  audioManager.play('/sounds/ive-got-this.mp3')
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/ive-got-this.mp3')
 }
 
 const triggerCorrectSound = () => {
-  audioManager.play('/sounds/mlg-horns-sound-effect.mp3')
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/mlg-horns-sound-effect.mp3')
 }
 
 const trrigerIncorrectSound = () => {
-  audioManager.play('/sounds/fahhhhhhhhhhhhhh.mp3')
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/fahhhhhhhhhhhhhh.mp3')
 }
 
 const trrigerRagequitSound = () => {
-  audioManager.play('/sounds/chicken-on-tree-screaming.mp3')
+  if (currentSettings.value?.enableSounds) audioManager.play('/sounds/chicken-on-tree-screaming.mp3')
 }
 
 // Analyse des paramètres du backend

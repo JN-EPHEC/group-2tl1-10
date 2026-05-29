@@ -14,5 +14,7 @@ router.get('/:id', verifyToken, categoryController.getCategoryById);
 
 // Route pour mettre à jour un quiz
 router.put('/:id', verifyToken, categoryController.updateCategory);
+// Route pour supprimer une category
+router.delete('/:id', verifyToken, categoryController.deleteCategory)
 
 export default router;

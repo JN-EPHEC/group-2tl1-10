@@ -170,3 +170,19 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
         next(error);
     }
 };
+
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Category.destroy({ where: { id } });
+
+        if (deleted) {
+            res.status(204).json({ succes: true, message: "Quiz supprimé avec succès." });
+        } else {
+
+            res.status(404).json({ sucess: false, message: "Quiz introuvable" });
+        }
+    } catch(error) {
+        next(error);
+    }
+};
