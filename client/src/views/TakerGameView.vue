@@ -164,6 +164,8 @@ onMounted(() => {
   })
 
   socket.on('results_revealed', (data: any) => {
+    audioManager.stop();
+    
     // Force la réponse en tableau pour gérer les réponses multiples sans planter
     let correct = data.correctAnswers || data.correctAnswer;
     if (correct === undefined || correct === null) correct = [];

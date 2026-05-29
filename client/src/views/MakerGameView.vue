@@ -208,8 +208,7 @@ onMounted(() => {
 
   socket.on('update_confused', (count: number) => {
     confusedCount.value = count;
-    if (count >= 0) {
-      audioManager.stop()
+    if (count >= 0 && !audioManager.isPlaying) {
       triggerDumbsound()
     }
   })
