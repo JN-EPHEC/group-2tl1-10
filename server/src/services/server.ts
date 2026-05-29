@@ -159,6 +159,7 @@ io.on("connection", (Socket) => {
             game.questions = quiz.questions;
             game.currentQuestionIndex = 0;
             game.confusedCount = 0;
+            game.rickrollUsed = false;
             game.status = 'playing';
 
             game.scores = {};
@@ -323,6 +324,7 @@ io.on("connection", (Socket) => {
         if (!game) return;
 
         game.confusedCount = 0;
+        game.rickrollUsed = false;
 
         // Sécurité : On empêche l'index d'aller plus loin que la fin du jeu
         if (game.currentQuestionIndex >= game.questions.length) return;
@@ -378,6 +380,15 @@ io.on("connection", (Socket) => {
     Socket.on("trigger_secret", (roomCode) => {
         const game = activeGames[roomCode];
         if (!game) return;
+
+        // ANTI-SPAM : Si la game n'existe pas ou que le Rickroll a DEJA été utilisé, on bloque !
+        if (!game || game.rickrollUsed) {
+            return;
+        }
+
+        // Si on arrive ici, c'est le PREMIER joueur à cliquer.
+        // On ferme instantanément le verrou pour tous les autres.
+        game.rickrollUsed = true;
 
         // On prévient le créateur d'afficher le Rickroll
         io.to(game.hostId).emit("activate_rickroll");
