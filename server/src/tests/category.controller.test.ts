@@ -1,4 +1,4 @@
-import { createCategory, getAllCategories, getCategoryById, updateCategory } from '../controllers/category.controller';
+import { createCategory, getAllCategories, getCategoryById, updateCategory, deleteCategory } from '../controllers/category.controller';
 import Category from '../models/category.model';
 import Question from '../models/question.model';
 import Setting from '../models/setting.model';
@@ -163,4 +163,73 @@ describe('Category Controller', () => {
             expect(mockRes.status).toHaveBeenCalledWith(200);
         });
     });
+
+    describe('deleteCategory', () => {
+    it('doit supprimer un quiz, ses questions et ses paramètres en cascade', async () => {
+        const req = { params: { id: '1' } } as unknown as Request;
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as unknown as Response;
+        const next = jest.fn() as NextFunction;
+
+        // Simulation : La BDD trouve 2 questions liées à ce quiz
+        (Question.findAll as jest.Mock).mockResolvedValue([{ id: 10 }, { id: 11 }]);
+        (Setting.destroy as jest.Mock).mockResolvedValue(2);
+        (Question.destroy as jest.Mock).mockResolvedValue(2);
+        (Category.destroy as jest.Mock).mockResolvedValue(1); // Le quiz est supprimé
+
+        await deleteCategory(req, res, next);
+
+        // Vérification que la logique en cascade s'est bien déclenchée dans le bon ordre
+        expect(Question.findAll).toHaveBeenCalledWith({ where: { categoryId: '1' } });
+        expect(Setting.destroy).toHaveBeenCalledWith({ where: { questionId: [10, 11] } });
+        expect(Question.destroy).toHaveBeenCalledWith({ where: { categoryId: '1' } });
+        expect(Category.destroy).toHaveBeenCalledWith({ where: { id: '1' } });
+        expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('doit renvoyer 404 si le quiz n\'existe pas', async () => {
+        const req = { params: { id: '999' } } as unknown as Request;
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as unknown as Response;
+        const next = jest.fn() as NextFunction;
+
+        // Simulation : Aucun quiz trouvé
+        (Question.findAll as jest.Mock).mockResolvedValue([]);
+        (Category.destroy as jest.Mock).mockResolvedValue(0);
+
+        await deleteCategory(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+    });
+
+    it('doit attraper les erreurs serveur (catch)', async () => {
+        const req = { params: { id: '1' } } as unknown as Request;
+        const res = {} as unknown as Response;
+        const next = jest.fn() as NextFunction;
+
+        // Simulation : Crash brutal de la base de données
+        (Question.findAll as jest.Mock).mockRejectedValue(new Error('Erreur fatale DB'));
+
+        await deleteCategory(req, res, next);
+
+        // Vérification que l'erreur est bien transmise au gestionnaire d'erreurs
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+});
+
+describe('getAllCategories', () => {
+    it('doit gérer les erreurs serveur (catch) lors de la récupération', async () => {
+        // On simule une requête avec un utilisateur connecté
+        const req = { user: { id: 1 } } as any;
+        const res = {} as any;
+        const next = jest.fn();
+
+        // On simule un crash lors de la recherche des catégories
+        (Category.findAll as jest.Mock).mockRejectedValue(new Error('Crash DB test'));
+
+        await getAllCategories(req, res, next);
+
+        // On vérifie que l'erreur est bien envoyée au middleware d'erreur
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+});
 });
