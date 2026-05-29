@@ -3,9 +3,11 @@
     
     <div class="w-full max-w-4xl bg-white border-4 border-black p-6 md:p-12 relative flex flex-col items-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
 
-      <div class="md:absolute top-8 right-8 w-24 h-24 border-4 border-dashed border-black bg-pink-200 flex flex-col items-center justify-center text-center font-bold text-xs transform md:rotate-3 mb-6 md:mb-0 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-        <span>QR CODE</span>
-        <span>HERE</span>
+      <div 
+        v-if="roomCode"
+        class="md:absolute top-8 right-8 w-32 h-32 aspect-square border-4 border-black bg-white flex items-center justify-center p-2 transform md:rotate-3 mb-6 md:mb-0 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-10"
+      >
+        <QrcodeVue :value="joinUrl" :size="110" level="H" />
       </div>
 
       <h1 class="text-4xl md:text-6xl font-black mb-6 text-center uppercase tracking-tight">
@@ -62,11 +64,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { socket } from '../services/socket';
-// import { computed } from 'vue';
-// import QrcodeVue from 'qrcode.vue'; 
+import QrcodeVue from 'qrcode.vue'; 
 
 const route = useRoute()
 const router = useRouter()
@@ -75,10 +76,20 @@ const roomCode = ref('')
 const players = ref<string[]>([])
 const quizId = route.params.id
 
+// Variable calculée dynamiquement avec des ACCENTS GRAVES (backticks) ``
+const joinUrl = computed(() => {
+  if (!roomCode.value) return '' // Pas de code, pas d'url
+  // window.location.origin récupère automatiquement http://localhost:5173 ou le domaine VPS
+  // Adapte bien la route '/taker' si ce n'est pas la bonne !
+  return `${window.location.origin}/taker?code=${roomCode.value}`
+})
+
 onMounted(() => {
     socket.connect()
 
     socket.emit('create_game', quizId, (Response: any) => {
+        // Dès qu'on reçoit le code (ex: 2544), roomCode est mis à jour
+        // Ce qui met à jour 'joinUrl', et le QR Code se dessine instantanément
         roomCode.value = Response.roomCode
     })
 

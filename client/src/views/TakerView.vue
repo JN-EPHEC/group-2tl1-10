@@ -65,16 +65,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { socket } from '../services/socket'
 
 const router = useRouter()
 const roomCode = ref('')
 const username = ref('')
 const isWaiting = ref(false)
+const route = useRoute()
 
 onMounted(() => {
     socket.connect()
+    if (route.query.code) {
+      roomCode.value = route.query.code as string
+      console.log("Code récupéré automatiquement depuis le QR Code :", route.query.code)
+    }
 })
 
 const joinGame = () => {
