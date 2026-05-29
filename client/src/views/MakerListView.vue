@@ -105,15 +105,20 @@ const deleteQuiz = async (quizId: number) => {
     try {
       const response = await fetch(`/api/categories/${quizId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}` // LE VOILÀ TON PASSEPORT VALIDE !
+        }
       });
+      
       const data = await response.json();
       
-      if (data.success) {
-        // Rafraîchir la liste locale pour faire disparaître le quiz visuellement
+      if (response.ok) {
         quizzes.value = quizzes.value.filter((q: any) => q.id !== quizId);
+      } else {
+        console.error("Erreur backend:", data.message);
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression du quiz :", error);
+      console.error("Erreur réseau :", error);
     }
   }
 };

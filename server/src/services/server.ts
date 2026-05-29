@@ -232,8 +232,8 @@ io.on("connection", (Socket) => {
         }
 
         let parsedTime = 15;
-        if (q.timeLimit) {
-            parsedTime = q.timeLimit;
+        if (q.difficulty) {
+            parsedTime = q.difficulty;
         } else if (q.settings && q.settings.timeLimit) {
             parsedTime = q.settings.timeLimit;
         }
