@@ -231,6 +231,16 @@ io.on("connection", (Socket) => {
             catch { correctAnswers = q.correctAnswer ? [q.correctAnswer] : []; }
         }
 
+        let parsedTime = 15;
+        if (q.timeLimit) {
+            parsedTime = q.timeLimit;
+        } else if (q.settings && q.settings.timeLimit) {
+            parsedTime = q.settings.timeLimit;
+        }
+
+        // On affiche dans le terminal backend ce qu'on a réellement trouvé
+        console.log(`⏱️ Temps envoyé pour la question : ${parsedTime} secondes`);
+
         // On renvoie la donnée pile quand le frontend la réclame
         callback({
             text: q.title,
@@ -238,7 +248,7 @@ io.on("connection", (Socket) => {
             index: game.currentQuestionIndex,
             total: game.questions.length,
             settings: q.settings,
-            timeLimit: q.settings?.timeLimit || 15,
+            timeLimit: Number(parsedTime),
             hasNoCorrectAnswer: correctAnswers.length === 0
         });
     });

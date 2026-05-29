@@ -174,15 +174,20 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
+        
+        // 1. On détruit d'abord TOUTES les questions liées à ce quiz pour débloquer la sécurité SQL
+        await Question.destroy({ where: { id: id } }); // Change 'categoryId' si ta colonne s'appelle autrement (ex: 'quizId')
+
+        // 2. Maintenant on peut détruire le quiz sans que SQL ne plante
         const deleted = await Category.destroy({ where: { id } });
-
+        
         if (deleted) {
-            res.status(204).json({ succes: true, message: "Quiz supprimé avec succès." });
+            res.status(200).json({ success: true, message: "Quiz et ses questions supprimés avec succès." });
         } else {
-
-            res.status(404).json({ sucess: false, message: "Quiz introuvable" });
+            res.status(404).json({ success: false, message: "Quiz introuvable." });
         }
-    } catch(error) {
+    } catch (error) {
+        console.error("Erreur destruction quiz:", error);
         next(error);
     }
 };

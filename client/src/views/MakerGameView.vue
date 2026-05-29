@@ -198,7 +198,7 @@ onMounted(() => {
   socket.emit('get_current_question', roomCode, (data: any) => {
     currentQ.value = data
     // On force la conversion en Nombre, en fouillant aussi dans les settings au cas où
-    timer.value = Number(data.settings?.timeLimit || data.timeLimit || 15)
+    timer.value = data.timeLimit
     startTimer()
     startBackgroundMusic()
   })
