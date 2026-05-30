@@ -8,12 +8,11 @@
           v-for="(ans, i) in answers" :key="ans + i"
           @click="submitAnswer(ans)"
           @mouseenter="jumpButton(i)"
+          @touchstart="handleTouch(i, $event)"
           :style="currentSettings?.jumpingButtons ? {
-            top: `${jumpPositions[i]?.y || 0}px`,
-            left: `${jumpPositions[i]?.x || 0}px`,
-            position: 'absolute'
+            transform: `translate(${jumpPositions[i]?.x || 0}px, ${jumpPositions[i]?.y || 0}px)`,
           } : {}"
-          class="p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-200 break-words z-10"
+          class="relative p-8 text-2xl md:text-3xl font-black bg-white border-4 border-black hover:bg-gray-100 shadow-[8px_8px_0px_rgba(0,0,0,1)] active:translate-y-2 active:translate-x-2 active:shadow-none transition-transform duration-200 break-words z-10"
         >
           {{ ans }}
         </button>
@@ -219,14 +218,22 @@ onUnmounted(() => {
   socket.off('game_over')
 })
 
+// Mécanique des sauts de boutons sur téléphone
+const handleTouch = (index: number, event: TouchEvent) => {
+  if (currentSettings.value?.jumpButtons) {
+    event.preventDefault()
+    jumpButton(index)
+  }
+}
+
 // Fonction de saut du bouton corrigée !
 const jumpButton = (index: number) => {
   if (!currentSettings.value?.jumpingButtons) return;
   
-  // Fait fuir le bouton de -150px à +150px autour de sa position initiale
+  // Mainteant adapté aux télphones (entre -100px et +100px)
   jumpPositions.value[index] = {
-    x: Math.floor(Math.random() * 300) - 150,
-    y: Math.floor(Math.random() * 300) - 150
+    x: Math.floor(Math.random() * 200) - 100,
+    y: Math.floor(Math.random() * 200) - 100
   };
 }
 
